@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="ko">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+		<meta
+			http-equiv="Content-Security-Policy"
+			content="default-src 'self'; img-src 'self' data:; style-src 'self'; script-src 'self'; connect-src 'none'; object-src 'none'; base-uri 'self'; form-action 'self'"
+		/>
+		<meta name="theme-color" content="#0f0f0f" />
+		<meta
+			name="description"
+			content="강민의 단풍바람 13기 메생결산을 Shorts 형식으로 보는 정적 페이지"
+		/>
+		<meta property="og:title" content="강민의 메생결산 Shorts" />
+		<meta
+			property="og:description"
+			content="에오스 마가다락방의 실제 메생결산 12개를 한 장씩 넘겨보세요."
+		/>
+		<meta property="og:image" content="assets/settlements/84.webp" />
+		<title>강민의 메생결산 Shorts</title>
+		<link rel="icon" href="assets/kangmin-avatar.webp" />
+		<link rel="stylesheet" href="styles.css" />
+		<script src="app.js" defer></script>
+	</head>
+	<body>
+		<div class="app" id="app">
+			<header class="topbar">
+				<div class="topbar__brand">
+					<button class="icon-button desktop-only" id="menu-toggle" type="button" aria-label="가이드 접기/펼치기">
+						<span data-icon="menu"></span>
+					</button>
+					<a class="brand-link" href="./" aria-label="홈으로">
+						<img src="assets/brand/logo-text.svg" alt="단풍바람" />
+					</a>
+				</div>
+
+				<form class="search" id="search-form" role="search">
+					<label class="sr-only" for="search-input">이름, 닉네임, 내용 검색</label>
+					<input id="search-input" type="search" autocomplete="off" placeholder="이름, 닉네임, 내용 검색" />
+					<button type="submit" aria-label="검색"><span data-icon="search"></span></button>
+				</form>
+
+				<div class="topbar__actions">
+					<button class="icon-button mobile-only" id="mobile-search-toggle" type="button" aria-label="검색 열기">
+						<span data-icon="search"></span>
+					</button>
+					<button class="login-pill desktop-only" type="button" data-open-profile>
+						<span data-icon="user"></span>
+						강민
+					</button>
+					<button class="icon-button mobile-only" type="button" data-open-profile aria-label="강민 프로필">
+						<span data-icon="more"></span>
+					</button>
+				</div>
+			</header>
+
+			<div class="mobile-search" id="mobile-search" hidden>
+				<form id="mobile-search-form" role="search">
+					<button class="icon-button" id="mobile-search-close" type="button" aria-label="검색 닫기">
+						<span data-icon="back"></span>
+					</button>
+					<label class="sr-only" for="mobile-search-input">이름, 닉네임, 내용 검색</label>
+					<input id="mobile-search-input" type="search" autocomplete="off" placeholder="이름, 닉네임, 내용 검색" />
+				</form>
+			</div>
+
+			<div class="workspace">
+				<aside class="sidebar" id="sidebar" aria-label="가이드">
+					<nav class="sidebar__nav">
+						<a class="nav-row is-active" href="#shorts"><span data-icon="home"></span><span>홈</span></a>
+						<button class="nav-row" type="button" data-demo-only><span data-icon="megaphone"></span><span>운영팀 한마디</span></button>
+						<button class="nav-row" type="button" data-demo-only><span data-icon="message"></span><span>톡</span></button>
+						<button class="nav-row" type="button" data-open-profile><span data-icon="user"></span><span>내 페이지</span></button>
+					</nav>
+
+					<div class="sidebar__section">
+						<p class="sidebar__title">멤버</p>
+						<button class="member-row" type="button" data-open-profile>
+							<img src="assets/kangmin-avatar.webp" alt="" />
+							<span>마가다락방</span>
+							<small>12</small>
+						</button>
+					</div>
+
+					<div class="sidebar__section">
+						<p class="sidebar__title">디자인</p>
+						<div class="theme-options" role="group" aria-label="색상 모드">
+							<button type="button" data-theme="system" aria-pressed="true">시스템</button>
+							<button type="button" data-theme="light" aria-pressed="false">라이트</button>
+							<button type="button" data-theme="dark" aria-pressed="false">다크</button>
+						</div>
+					</div>
+
+					<p class="period">'25년 8월 25일 ~ '26년 2월 22일의 기록</p>
+				</aside>
+
+				<main class="content" id="shorts">
+					<section class="viewer-stage" aria-label="강민의 메생결산 Shorts">
+						<div class="short-frame">
+							<div class="feed" id="feed" tabindex="0" aria-live="polite"></div>
+							<div class="empty-state" id="empty-state" hidden>
+								<strong>검색 결과가 없습니다.</strong>
+								<button type="button" id="clear-search">전체 결산 보기</button>
+							</div>
+						</div>
+
+						<div class="desktop-actions desktop-only" aria-label="현재 결산 작업">
+							<button type="button" data-current-action="like"><span class="action-icon" data-icon="like"></span><span>좋아요</span></button>
+							<a data-current-action="save" download><span class="action-icon" data-icon="download"></span><span>저장</span></a>
+							<button type="button" data-current-action="share"><span class="action-icon" data-icon="share"></span><span>공유</span></button>
+							<button class="avatar-action" type="button" data-open-profile aria-label="강민 프로필">
+								<img src="assets/kangmin-avatar.webp" alt="" />
+							</button>
+						</div>
+
+						<div class="pager desktop-only" aria-label="결산 이동">
+							<button id="previous" type="button" aria-label="이전 결산"><span data-icon="up"></span></button>
+							<button id="next" type="button" aria-label="다음 결산"><span data-icon="down"></span></button>
+						</div>
+					</section>
+				</main>
+			</div>
+		</div>
+
+		<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+		<dialog class="profile-dialog" id="profile-dialog">
+			<button class="dialog-close" type="button" aria-label="프로필 닫기" data-close-profile><span data-icon="close"></span></button>
+			<img class="profile-avatar" src="assets/kangmin-avatar.webp" alt="강민 캐릭터" />
+			<div class="profile-copy">
+				<p class="profile-eyebrow">단풍바람 13기 · 메생결산 12개</p>
+				<h1>강민 <span>마가다락방</span></h1>
+				<div class="profile-tags">
+					<span><img src="assets/eos.png" alt="" />에오스</span>
+					<span>Lv. 285</span>
+					<span>제로</span>
+				</div>
+			</div>
+		</dialog>
+	</body>
+</html>

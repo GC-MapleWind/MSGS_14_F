@@ -41,6 +41,9 @@ const assets = {
 	generation: assetUrl("ui/generation-13.svg")
 };
 
+const favicon = document.querySelector('link[rel="icon"]');
+if (favicon) favicon.href = assets.avatar;
+
 const view = document.querySelector("#view");
 const app = document.querySelector("#app");
 const toast = document.querySelector("#toast");

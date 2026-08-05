@@ -3,17 +3,18 @@
 	<head>
 		<meta charset="utf-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
-		<title>페이지를 찾을 수 없습니다</title>
-		<style>
-			body { min-height: 100vh; margin: 0; display: grid; place-items: center; font-family: system-ui, sans-serif; background: #0f0f0f; color: #fff; }
-			main { text-align: center; padding: 24px; }
-			a { color: #8ab4f8; }
-		</style>
+		<title>단풍바람 메생결산으로 이동 중</title>
 	</head>
 	<body>
-		<main>
-			<h1>페이지를 찾을 수 없습니다.</h1>
-			<p><a href="./">강민의 메생결산 Shorts로 돌아가기</a></p>
-		</main>
+		<p>메생결산 화면으로 이동 중입니다.</p>
+		<script>
+			(() => {
+				const parts = location.pathname.split("/").filter(Boolean);
+				const rootHosted = parts[0] === "member" || parts[0] === "msg";
+				const base = rootHosted ? "/" : `/${parts.shift()}/`;
+				const route = `/${parts.join("/")}${location.search}${location.hash}`;
+				location.replace(`${base}?route=${encodeURIComponent(route)}`);
+			})();
+		</script>
 	</body>
 </html>

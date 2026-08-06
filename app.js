@@ -21,6 +21,7 @@ const settlements = [
 	{ id: "74", title: "이지 칼로스도 이제서야 솔플하다니", acquiredAt: "2025-09-07" },
 	{ id: "73", title: "노말 세렌을 이제서야 솔플하다니", acquiredAt: "2025-09-07" }
 ];
+const homePreviewSettlement = settlements[Math.floor(Math.random() * settlements.length)] ?? null;
 
 const teamMessage = {
 	id: "1",
@@ -286,16 +287,18 @@ function renderHome() {
 		? settlements.filter((item) => `${character.name} ${character.nickname} ${character.server} ${item.title}`.toLocaleLowerCase("ko-KR").includes(normalized))
 		: settlements;
 	const characterMatches = !normalized || `${character.name} ${character.nickname} ${character.server} ${settlements.map((item) => item.title).join(" ")}`.toLocaleLowerCase("ko-KR").includes(normalized);
+	const previewSettlement = normalized && matchingSettlements.length > 0
+		? matchingSettlements[Math.floor(Math.random() * matchingSettlements.length)]
+		: homePreviewSettlement;
 
 	const card = characterMatches ? `
-		<a class="channel-card" href="${routeUrl(`/shorts/1${matchingSettlements[0] ? `?item=${matchingSettlements[0].id}` : ""}`)}" data-route="/shorts/1${matchingSettlements[0] ? `?item=${matchingSettlements[0].id}` : ""}">
+		<a class="channel-card" href="${routeUrl(`/shorts/1${previewSettlement ? `?item=${previewSettlement.id}` : ""}`)}" data-route="/shorts/1${previewSettlement ? `?item=${previewSettlement.id}` : ""}">
 			<div class="channel-card__visual">
-				<div class="channel-card__backdrop"><img src="${assets.avatar}" alt="" /></div>
-				<img class="channel-card__avatar" src="${assets.avatar}" alt="강민 캐릭터" />
+				${previewSettlement ? `<img class="channel-card__preview" src="${settlementImage(previewSettlement)}" alt="${escapeHtml(previewSettlement.title)}" />` : ""}
 				<span class="channel-card__count">결산 ${settlements.length}개</span>
 			</div>
 			<div class="channel-card__meta">
-				<img src="${assets.avatar}" alt="" />
+				<img src="${assets.avatar}" alt="${escapeHtml(character.nickname)} 캐릭터" />
 				<div><strong>${escapeHtml(character.nickname)}</strong><span>${escapeHtml(character.name)} · ${escapeHtml(character.server)} · ${escapeHtml(character.job)}</span></div>
 				<span class="channel-card__more" aria-hidden="true">${icons.more}</span>
 			</div>

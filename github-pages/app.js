@@ -177,10 +177,12 @@ function topbar() {
 					<img src="${assets.logo}" alt="COMMUNITY_PROJECT" />
 				</a>
 			</div>
-			<form class="search" data-search-form role="search">
-				<input type="search" name="q" value="${escapeHtml(query)}" placeholder="이름, 닉네임, 내용 검색" aria-label="이름, 닉네임, 내용 검색" />
-				<button type="submit" aria-label="검색">${icons.search}</button>
-			</form>
+			<div class="topbar__search">
+				<form class="search" data-search-form role="search">
+					<input type="search" name="q" value="${escapeHtml(query)}" placeholder="이름, 닉네임, 내용 검색" aria-label="이름, 닉네임, 내용 검색" />
+					<button type="submit" aria-label="검색">${icons.search}</button>
+				</form>
+			</div>
 			<div class="topbar__actions">
 				<a class="login-pill" href="${routeUrl(user ? "/member/1" : "/login")}" data-route="${user ? "/member/1" : "/login"}">
 					${icons.user}<span>${escapeHtml(user?.name ?? "로그인")}</span>
@@ -231,7 +233,7 @@ function guide() {
 				<a class="guide-row ${active("/") ? "is-active" : ""}" href="${routeUrl("/")}" data-route="/">${icons.home}<span>홈</span></a>
 				<a class="guide-row ${active("/member/admin-team") || active("/team-message") ? "is-active" : ""}" href="${routeUrl("/member/admin-team")}" data-route="/member/admin-team">${icons.megaphone}<span>운영팀 한마디</span></a>
 				<a class="guide-row ${active("/talk") ? "is-active" : ""}" href="${routeUrl("/talk")}" data-route="/talk">${icons.message}<span>톡</span></a>
-				<a class="guide-row ${active("/member/1") ? "is-active" : ""}" href="${routeUrl(user ? "/member/1" : "/login")}" data-route="${user ? "/member/1" : "/login"}">${icons.user}<span>내 페이지</span></a>
+				<a class="guide-row" href="${routeUrl(user ? "/member/1" : "/login")}" data-route="${user ? "/member/1" : "/login"}">${icons.user}<span>내 페이지</span></a>
 			</nav>
 			${!user ? `
 				<section class="guide__login">
@@ -239,12 +241,6 @@ function guide() {
 					<a class="login-pill" href="${routeUrl("/login")}" data-route="/login">${icons.user}<span>로그인</span></a>
 				</section>
 			` : ""}
-			<section class="guide__section">
-				<h2>멤버</h2>
-				<a class="member-row" href="${routeUrl("/member/1")}" data-route="/member/1">
-					<img src="${assets.avatar}" alt="" /><span>마가다락방</span><small>12</small>
-				</a>
-			</section>
 			<section class="guide__section">
 				<h2>디자인</h2>
 				<div class="theme-options">
@@ -270,10 +266,10 @@ function bottomNav() {
 	`;
 }
 
-function shell(content, { mobileTitle = "", main = false, back = "", close = "", bottom = true, contentClass = "" } = {}) {
+function shell(content, { mobileTitle = "", main = false, back = "", close = "", bottom = true, contentClass = "", mobileHeaderVisible = true } = {}) {
 	return `
 		${topbar()}
-		${mobileHeader({ title: mobileTitle, main, back, close })}
+		${mobileHeaderVisible ? mobileHeader({ title: mobileTitle, main, back, close }) : ""}
 		<div class="workspace">
 			${guide()}
 			<main class="content ${contentClass}">${content}</main>
@@ -291,36 +287,27 @@ function renderHome() {
 		: settlements;
 	const characterMatches = !normalized || `${character.name} ${character.nickname} ${character.server} ${settlements.map((item) => item.title).join(" ")}`.toLocaleLowerCase("ko-KR").includes(normalized);
 
-	const resultCopy = query
-		? `<div class="search-summary"><strong>“${escapeHtml(query)}” 검색 결과</strong><span>${characterMatches ? 1 : 0}명 · 쇼츠 ${matchingSettlements.length}개</span></div>`
-		: "";
 	const card = characterMatches ? `
-		<article class="channel-card">
-			<a class="channel-card__visual" href="${routeUrl(`/shorts/1${matchingSettlements[0] ? `?item=${matchingSettlements[0].id}` : ""}`)}" data-route="/shorts/1${matchingSettlements[0] ? `?item=${matchingSettlements[0].id}` : ""}">
-				<div class="channel-card__backdrop"><img src="${settlementImage(matchingSettlements[0] ?? settlements[0])}" alt="" /></div>
+		<a class="channel-card" href="${routeUrl(`/shorts/1${matchingSettlements[0] ? `?item=${matchingSettlements[0].id}` : ""}`)}" data-route="/shorts/1${matchingSettlements[0] ? `?item=${matchingSettlements[0].id}` : ""}">
+			<div class="channel-card__visual">
+				<div class="channel-card__backdrop"><img src="${assets.avatar}" alt="" /></div>
 				<img class="channel-card__avatar" src="${assets.avatar}" alt="강민 캐릭터" />
-				<span class="channel-card__count">결산 ${matchingSettlements.length || settlements.length}개</span>
-				<span class="channel-card__play">${icons.play}</span>
-			</a>
-			<div class="channel-card__meta">
-				<img src="${assets.eos}" alt="에오스" />
-				<div><strong>강민</strong><span>@마가다락방 · ${character.job}</span></div>
-				<a class="text-link" href="${routeUrl("/member/1")}" data-route="/member/1">프로필</a>
+				<span class="channel-card__count">결산 ${settlements.length}개</span>
 			</div>
-		</article>
+			<div class="channel-card__meta">
+				<img src="${assets.avatar}" alt="" />
+				<div><strong>${escapeHtml(character.nickname)}</strong><span>${escapeHtml(character.name)} · ${escapeHtml(character.server)} · ${escapeHtml(character.job)}</span></div>
+				<span class="channel-card__more" aria-hidden="true">${icons.more}</span>
+			</div>
+		</a>
 	` : `
 		<div class="empty-state">
-			${icons.search}
-			<h2>일치하는 기록이 없습니다.</h2>
-			<p>강민, 마가다락방 또는 결산 내용으로 다시 검색해 보세요.</p>
-			<a class="chip chip--active" href="${routeUrl("/")}" data-route="/">전체 보기</a>
+			<h2>검색 결과가 없습니다.</h2>
 		</div>
 	`;
 
 	app.innerHTML = shell(`
 		<section class="home-page scroll-page">
-			<div class="chips"><button class="chip chip--active" type="button">전체</button><button class="chip" type="button">에오스</button></div>
-			${resultCopy}
 			<div class="channel-grid">${card}</div>
 		</section>
 	`, { main: true });
@@ -338,11 +325,10 @@ function renderShorts() {
 			<img class="short__blur" src="${settlementImage(item)}" alt="" aria-hidden="true" loading="${index < 3 ? "eager" : "lazy"}" />
 			<img class="short__image" src="${settlementImage(item)}" alt="${escapeHtml(item.title)}" loading="${index < 3 ? "eager" : "lazy"}" />
 			<div class="short__shade"></div>
-			<span class="short__count">${index + 1} / ${settlements.length}</span>
 			<div class="short__channel">
 				<a class="channel-avatar" href="${routeUrl("/member/1")}" data-route="/member/1"><img src="${assets.avatar}" alt="강민 프로필" /></a>
 				<a class="channel-handle" href="${routeUrl("/member/1")}" data-route="/member/1">@마가다락방</a>
-				<a class="subscribe" href="${routeUrl("/member/1")}" data-route="/member/1">프로필</a>
+				<a class="subscribe" href="${routeUrl("/member/1")}" data-route="/member/1">구독</a>
 			</div>
 			<div class="short__copy"><h1>${escapeHtml(item.title)}</h1><time datetime="${item.acquiredAt}">${formatDate(item.acquiredAt)}</time></div>
 			<div class="mobile-actions">
@@ -376,7 +362,8 @@ function renderShorts() {
 	const currentDownload = document.querySelector("[data-current-download]");
 	const currentShare = document.querySelector("[data-current-share]");
 	let currentIndex = initialIndex;
-	let wheelLocked = false;
+	let wheelConsumed = false;
+	let wheelIdleTimer = null;
 
 	const syncCurrent = () => {
 		const item = settlements[currentIndex];
@@ -407,11 +394,15 @@ function renderShorts() {
 		}
 	};
 	const onWheel = (event) => {
-		if (Math.abs(event.deltaY) < 8 || wheelLocked) return;
 		event.preventDefault();
-		wheelLocked = true;
+		window.clearTimeout(wheelIdleTimer);
+		wheelIdleTimer = window.setTimeout(() => {
+			wheelConsumed = false;
+			wheelIdleTimer = null;
+		}, 450);
+		if (wheelConsumed || Math.abs(event.deltaY) < 20) return;
+		wheelConsumed = true;
 		moveTo(currentIndex + (event.deltaY > 0 ? 1 : -1));
-		window.setTimeout(() => { wheelLocked = false; }, 450);
 	};
 	const onKeydown = (event) => {
 		if (event.target.matches("input, textarea")) return;
@@ -425,7 +416,10 @@ function renderShorts() {
 	next.addEventListener("click", () => moveTo(currentIndex + 1));
 	document.querySelectorAll("[data-like]").forEach((button) => button.addEventListener("click", () => toggleLike(button.dataset.like, liked, syncCurrent)));
 	document.querySelectorAll("[data-share]").forEach((button) => button.addEventListener("click", () => shareSettlement(button.dataset.share)));
-	activeFeedCleanup = () => document.removeEventListener("keydown", onKeydown);
+	activeFeedCleanup = () => {
+		document.removeEventListener("keydown", onKeydown);
+		window.clearTimeout(wheelIdleTimer);
+	};
 	requestAnimationFrame(() => moveTo(initialIndex, "auto"));
 }
 
@@ -454,69 +448,85 @@ async function shareSettlement(id) {
 	}
 }
 
+function channelToolbar() {
+	return `
+		<header class="channel-toolbar">
+			<a class="icon-button" href="${routeUrl("/")}" data-route="/" aria-label="뒤로가기">${icons.back}</a>
+			<div aria-hidden="true"><span>${icons.search}</span><span class="channel-toolbar__more">${icons.more}</span></div>
+		</header>
+	`;
+}
+
 function renderMember() {
 	document.title = "강민 - ACTIVITY_RECAP";
 	const order = new URLSearchParams(location.search).get("sort") === "oldest" ? "oldest" : "latest";
 	const items = order === "oldest" ? [...settlements].reverse() : settlements;
 	app.innerHTML = shell(`
-		<section class="profile-page scroll-page">
-			<div class="profile-hero">
-				<img class="profile-hero__avatar" src="${assets.avatar}" alt="강민" />
-				<div class="profile-hero__copy"><h1>강민</h1><p>@마가다락방</p><span>${character.server} · ${character.job} · 결산 ${settlements.length}개</span></div>
-				<a class="outline-button" href="${routeUrl("/member/1/save")}" data-route="/member/1/save">캐릭터 카드 저장</a>
-			</div>
-			<div class="tabs"><button class="is-active" type="button">홈</button><button type="button" data-scroll-shorts>Shorts</button></div>
-			<div class="profile-list-head"><h2>Shorts</h2><div class="chips"><a class="chip ${order === "latest" ? "chip--active" : ""}" href="${routeUrl("/member/1?sort=latest")}" data-route="/member/1?sort=latest">최신순</a><a class="chip ${order === "oldest" ? "chip--active" : ""}" href="${routeUrl("/member/1?sort=oldest")}" data-route="/member/1?sort=oldest">오래된순</a></div></div>
-			<div class="shorts-grid" id="profile-shorts">
-				${items.map((item) => `
-					<a class="short-thumbnail" href="${routeUrl(`/shorts/1?item=${item.id}`)}" data-route="/shorts/1?item=${item.id}">
-						<div><img src="${settlementImage(item)}" alt="${escapeHtml(item.title)}" /><span>${icons.play}</span></div>
-						<strong>${escapeHtml(item.title)}</strong><time datetime="${item.acquiredAt}">${formatDate(item.acquiredAt, false)}</time>
-					</a>
-				`).join("")}
+		<section class="channel-view">
+			${channelToolbar()}
+			<div class="channel-scroll">
+				<div class="channel-banner"><img src="${assets.avatar}" alt="" aria-hidden="true" /></div>
+				<div class="channel-header">
+					<img class="profile-avatar" src="${assets.avatar}" alt="강민" />
+					<div class="channel-copy"><strong>강민</strong><span>@마가다락방</span><small>${character.server} · ${character.job}</small><small>결산 ${settlements.length}개</small></div>
+				</div>
+				<div class="channel-save-wrap"><a class="channel-save" href="${routeUrl("/member/1/save")}" data-route="/member/1/save">결산 이미지 저장</a></div>
+				<div class="channel-tabs"><span>홈</span><strong>Shorts</strong></div>
+				<div class="channel-sort"><a class="chip ${order === "latest" ? "chip--active" : ""}" href="${routeUrl("/member/1?sort=latest")}" data-route="/member/1?sort=latest">최신순</a><a class="chip ${order === "oldest" ? "chip--active" : ""}" href="${routeUrl("/member/1?sort=oldest")}" data-route="/member/1?sort=oldest">오래된순</a></div>
+				<div class="channel-shorts-grid">
+					${items.map((item) => `
+						<a class="channel-short" href="${routeUrl(`/shorts/1?item=${item.id}`)}" data-route="/shorts/1?item=${item.id}">
+							<img src="${settlementImage(item)}" alt="${escapeHtml(item.title)}" />
+							<span class="channel-short__more" aria-hidden="true">${icons.more}</span>
+							<span class="channel-short__copy"><strong>${escapeHtml(item.title)}</strong><time datetime="${item.acquiredAt}">${formatDate(item.acquiredAt, false)}</time></span>
+						</a>
+					`).join("")}
+				</div>
 			</div>
 		</section>
-	`, { mobileTitle: "강민", back: "/", bottom: true });
+	`, { bottom: true, mobileHeaderVisible: false });
 	bindShellEvents();
-	document.querySelector("[data-scroll-shorts]")?.addEventListener("click", () => document.querySelector("#profile-shorts")?.scrollIntoView({ behavior: "smooth" }));
 }
 
 function renderAdminTeam() {
 	document.title = "운영팀 한마디 - COMMUNITY_PROJECT";
 	app.innerHTML = shell(`
-		<section class="profile-page scroll-page">
-			<div class="profile-hero profile-hero--team">
-				<div class="team-avatar">${icons.megaphone}</div>
-				<div class="profile-hero__copy"><h1>COMMUNITY_PROJECT 운영팀</h1><p>@운영팀</p><span>COHORT · 가천대학교 · 한마디 1개</span></div>
+		<section class="channel-view">
+			${channelToolbar()}
+			<div class="channel-scroll">
+				<div class="channel-banner channel-banner--team"></div>
+				<div class="channel-header">
+					<div class="profile-avatar profile-avatar--team">${icons.megaphone}</div>
+					<div class="channel-copy"><strong>COMMUNITY_PROJECT 운영팀</strong><span>@운영팀</span><small>COHORT · 가천대학교 · 운영팀</small><small>한마디 1개</small></div>
+				</div>
+				<div class="channel-tabs"><span>홈</span><strong>한마디</strong></div>
+				<div class="team-feed">
+					<a class="team-row" href="${routeUrl("/team-message/1")}" data-route="/team-message/1">
+						<div class="team-row__image">${icons.megaphone}</div>
+						<div><strong>${teamMessage.title}</strong><span>${teamMessage.name} ${teamMessage.role}</span></div>
+					</a>
+				</div>
 			</div>
-			<div class="tabs"><button class="is-active" type="button">홈</button><button type="button" data-scroll-messages>한마디</button></div>
-			<section class="team-list" id="team-messages">
-				<h2>운영팀 한마디</h2>
-				<a class="team-message-card" href="${routeUrl("/team-message/1")}" data-route="/team-message/1">
-					<img src="${assets.avatar}" alt="강민" />
-					<div><span>${teamMessage.role}</span><h3>${teamMessage.title}</h3><p>${teamMessage.content}</p><small>${teamMessage.name}</small></div>
-					${icons.more}
-				</a>
-			</section>
 		</section>
-	`, { mobileTitle: "운영팀 한마디", back: "/" });
+	`, { bottom: true, mobileHeaderVisible: false });
 	bindShellEvents();
-	document.querySelector("[data-scroll-messages]")?.addEventListener("click", () => document.querySelector("#team-messages")?.scrollIntoView({ behavior: "smooth" }));
 }
 
 function renderTeamMessage() {
 	document.title = `${teamMessage.name} - 운영팀 한마디`;
 	app.innerHTML = shell(`
-		<article class="detail-page scroll-page">
-			<div class="detail-image"><img src="${assets.avatar}" alt="강민" /></div>
-			<dl class="detail-fields">
-				<div><dt>이름</dt><dd>${teamMessage.name}</dd></div>
-				<div><dt>직책</dt><dd>${teamMessage.role}</dd></div>
-				<div><dt>상세 내용</dt><dd>${teamMessage.content}</dd></div>
-			</dl>
-			<img class="detail-logo" src="${assets.logo}" alt="COMMUNITY_PROJECT" />
-		</article>
-	`, { mobileTitle: "", close: "/member/admin-team", bottom: false });
+		<section class="detail-view">
+			<header class="detail-toolbar"><a class="icon-button" href="${routeUrl("/member/admin-team")}" data-route="/member/admin-team" aria-label="닫기">${icons.close}</a></header>
+			<article class="detail-page scroll-page">
+				<div class="detail-image"><img src="${assets.avatar}" alt="강민" /></div>
+				<dl class="detail-fields">
+					<div><dt>직책</dt><dd>${teamMessage.role}</dd></div>
+					<div><dt>상세 내용</dt><dd>${teamMessage.content}</dd></div>
+				</dl>
+				<img class="detail-logo" src="${assets.logo}" alt="COMMUNITY_PROJECT" />
+			</article>
+		</section>
+	`, { bottom: false, mobileHeaderVisible: false });
 	bindShellEvents();
 }
 
@@ -531,13 +541,13 @@ function renderTalk() {
 			<div class="comment-list">
 				${comments.length ? comments.map((comment) => `
 					<article class="comment"><div class="comment__avatar">${escapeHtml(comment.author.slice(0, 1))}</div><div><p><strong>${escapeHtml(comment.author)}</strong><time>${escapeHtml(comment.createdAt)}</time></p><span>${escapeHtml(comment.content)}</span></div></article>
-				`).join("") : '<div class="comments-empty"><h2>아직 등록된 톡이 없습니다.</h2><p>체험 로그인을 하고 첫 톡을 남겨 보세요.</p></div>'}
+				`).join("") : ""}
 			</div>
 			<div class="talk-composer">
 				${user ? `<form data-comment-form><textarea name="comment" rows="1" maxlength="240" placeholder="톡을 남겨 보세요." aria-label="톡 내용"></textarea><button type="submit" aria-label="톡 보내기">${icons.share}</button></form>` : `<a class="talk-login" href="${routeUrl("/login?next=/talk")}" data-route="/login?next=/talk">이름/학번 입력하고 톡 등록하기 →</a>`}
 			</div>
 		</section>
-	`, { mobileTitle: "ACTIVITY_RECAP 톡", back: "/", bottom: true, contentClass: "content--talk" });
+	`, { bottom: true, contentClass: "content--talk", mobileHeaderVisible: false });
 	bindShellEvents();
 	document.querySelector("[data-comment-form]")?.addEventListener("submit", (event) => {
 		event.preventDefault();
@@ -553,28 +563,23 @@ function renderTalk() {
 function renderLogin() {
 	document.title = "로그인 - COMMUNITY_PROJECT";
 	const next = normalizeAppRoute(new URLSearchParams(location.search).get("next"), "/");
-	app.innerHTML = `
+	app.innerHTML = shell(`
 		<main class="auth-page">
-			<a class="auth-close icon-button" href="${routeUrl("/")}" data-route="/" aria-label="닫기">${icons.close}</a>
 			<section class="auth-card">
 				<img src="${assets.logo}" alt="COMMUNITY_PROJECT" />
-				<div class="demo-hint"><span>정적 체험판</span><button type="button" data-demo-fill>체험 정보 자동 입력</button></div>
 				<form class="auth-form" data-login-form>
-					<label><span>이름</span><input name="name" maxlength="3" autocomplete="name" placeholder="이름" /></label>
-					<label><span>학번</span><input name="studentId" inputmode="numeric" maxlength="9" placeholder="학번 9자리" /></label>
+					<div class="auth-input-group">
+						<input name="name" maxlength="3" autocomplete="name" placeholder="이름" aria-label="이름" />
+						<input name="studentId" inputmode="numeric" maxlength="9" placeholder="학번" aria-label="학번" />
+					</div>
 					<button class="primary-button" type="submit">ACTIVITY_RECAP 입장</button>
-					<label class="check-row"><input type="checkbox" name="remember" checked /><span>이름 저장</span></label>
+					<label class="check-row"><input type="checkbox" name="remember" /><span>이름 저장</span></label>
 				</form>
-				<a class="auth-secondary" href="${routeUrl("/auth/signup")}" data-route="/auth/signup">회원가입 화면도 체험하기</a>
 			</section>
 			<p class="auth-footer">COMMUNITY_PROJECT 회원이 이용 가능한 서비스입니다.</p>
 		</main>
-	`;
-	bindRouteLinks();
-	document.querySelector("[data-demo-fill]")?.addEventListener("click", () => {
-		document.querySelector('[name="name"]').value = "강민";
-		document.querySelector('[name="studentId"]').value = "202600001";
-	});
+	`, { bottom: false, contentClass: "content--auth", mobileHeaderVisible: false });
+	bindShellEvents();
 	document.querySelector("[data-login-form]")?.addEventListener("submit", (event) => {
 		event.preventDefault();
 		const form = new FormData(event.currentTarget);
@@ -592,9 +597,8 @@ function renderLogin() {
 
 function renderSignup() {
 	document.title = "회원가입 - COMMUNITY_PROJECT";
-	app.innerHTML = `
+	app.innerHTML = shell(`
 		<main class="auth-page">
-			<a class="auth-close icon-button" href="${routeUrl("/login")}" data-route="/login" aria-label="뒤로가기">${icons.back}</a>
 			<section class="auth-card">
 				<h1>회원가입</h1>
 				<p class="auth-intro">정적 체험판에서는 입력한 정보가 이 브라우저에만 저장됩니다.</p>
@@ -605,8 +609,8 @@ function renderSignup() {
 				</form>
 			</section>
 		</main>
-	`;
-	bindRouteLinks();
+	`, { bottom: false, contentClass: "content--auth", mobileHeaderVisible: false });
+	bindShellEvents();
 	document.querySelector("[data-signup-form]")?.addEventListener("submit", (event) => {
 		event.preventDefault();
 		const form = new FormData(event.currentTarget);
@@ -624,7 +628,7 @@ function renderSignup() {
 
 function renderAuthCallback() {
 	document.title = "로그인 확인 - COMMUNITY_PROJECT";
-	app.innerHTML = `
+	app.innerHTML = shell(`
 		<main class="auth-page">
 			<section class="auth-card">
 				<img src="${assets.logo}" alt="COMMUNITY_PROJECT" />
@@ -633,13 +637,13 @@ function renderAuthCallback() {
 				<a class="primary-button" href="${routeUrl("/login")}" data-route="/login">체험 로그인으로 이동</a>
 			</section>
 		</main>
-	`;
-	bindRouteLinks();
+	`, { bottom: false, contentClass: "content--auth", mobileHeaderVisible: false });
+	bindShellEvents();
 }
 
 function renderSave() {
 	document.title = "캐릭터 카드 저장 - 강민";
-	app.innerHTML = `
+	app.innerHTML = shell(`
 		<main class="save-page">
 			<a class="save-close icon-button" href="${routeUrl("/member/1")}" data-route="/member/1" aria-label="닫기">${icons.close}</a>
 			<section class="save-content">
@@ -654,8 +658,8 @@ function renderSave() {
 				<button class="save-button" type="button" data-save-card>${icons.download}<span>저장하기</span></button>
 			</section>
 		</main>
-	`;
-	bindRouteLinks();
+	`, { bottom: false, contentClass: "content--save", mobileHeaderVisible: false });
+	bindShellEvents();
 	document.querySelector("[data-save-card]")?.addEventListener("click", downloadCard);
 }
 

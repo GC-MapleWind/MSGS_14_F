@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="ko">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<title>ACTIVITY_RECAP으로 이동 중</title>
+	</head>
+	<body>
+		<p>ACTIVITY_RECAP 체험판으로 이동 중입니다.</p>
+		<script>
+			(() => {
+				const parts = location.pathname.split("/").filter(Boolean);
+				const routeRoots = new Set([
+					"shorts",
+					"member",
+					"talk",
+					"login",
+					"auth",
+					"team-message",
+					"msg"
+				]);
+				const rootHosted = routeRoots.has(parts[0]);
+				const base = rootHosted ? "/" : `/${parts.shift() || "MSGS_14_F"}/`;
+				const route = `/${parts.join("/")}${location.search}${location.hash}`;
+				location.replace(`${base}?route=${encodeURIComponent(route)}`);
+			})();
+		</script>
+	</body>
+</html>

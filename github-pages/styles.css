@@ -690,6 +690,13 @@ svg {
 	object-fit: cover;
 }
 
+@media (min-width: 1024px) {
+	.short__image {
+		object-fit: contain;
+		object-position: center;
+	}
+}
+
 .short__shade {
 	background: linear-gradient(180deg, rgb(0 0 0 / 12%) 0%, transparent 42%, rgb(0 0 0 / 74%) 100%);
 }

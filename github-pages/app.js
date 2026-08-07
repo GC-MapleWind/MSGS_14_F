@@ -4,7 +4,7 @@ const character = {
 	nickname: "마가다락방",
 	server: "에오스",
 	job: "제로",
-	club: "COMMUNITY_PROJECT"
+	club: "단풍바람 14기"
 };
 
 const settlements = [
@@ -27,8 +27,8 @@ const teamMessage = {
 	id: "1",
 	name: "강민",
 	role: "인사팀장",
-	title: "COHORT COMMUNITY_PROJECT을 이끌며",
-	content: "여러분과 함께해서 행복했습니다. COHORT도 화이팅!"
+	title: "단풍바람 14기를 함께하며",
+	content: "단풍바람 14기를 여러분과 함께해서 행복했습니다. 모두 화이팅!"
 };
 
 const currentScriptUrl = new URL(document.currentScript.src);
@@ -38,12 +38,12 @@ const assetUrl = (path) => new URL(`assets/${path}`, appRootUrl).href;
 const routeUrl = (path = "/") => `${basePath}${path}` || "/";
 
 const assets = {
-	avatar: assetUrl("kangmin-avatar.webp"),
-	eos: assetUrl("eos.png"),
-	logo: assetUrl("ui/logo-text-mono.svg"),
-	logoWhite: assetUrl("ui/logo-text-white.svg"),
-	generation: assetUrl("ui/generation-13.svg")
+	avatar: assetUrl("kangmin-avatar.webp")
 };
+
+function brandMark(modifier = "") {
+	return `<span class="brand-mark ${modifier}"><strong>단풍바람</strong><b>14기</b></span>`;
+}
 
 const favicon = document.querySelector('link[rel="icon"]');
 if (favicon) favicon.href = assets.avatar;
@@ -105,8 +105,8 @@ function normalizeAppRoute(value, fallback = "/") {
 	if (!candidate.startsWith("/") || candidate.startsWith("//") || candidate.includes("\\")) return fallback;
 
 	try {
-		const parsed = new URL(candidate, "https://activity-recap.invalid");
-		if (parsed.origin !== "https://activity-recap.invalid") return fallback;
+		const parsed = new URL(candidate, "https://maplewind-14.invalid");
+		if (parsed.origin !== "https://maplewind-14.invalid") return fallback;
 		const path = parsed.pathname.replace(/\/+$/, "") || "/";
 		const allowed = path === "/"
 			|| path === "/shorts/1"
@@ -175,7 +175,7 @@ function topbar() {
 			<div class="topbar__brand">
 				<button class="icon-button" type="button" data-toggle-guide aria-label="가이드 접기">${icons.menu}</button>
 				<a class="brand-link" href="${routeUrl("/")}" data-route="/" aria-label="홈으로">
-					<img src="${assets.logo}" alt="COMMUNITY_PROJECT" />
+					${brandMark()}
 				</a>
 			</div>
 			<div class="topbar__search">
@@ -205,7 +205,7 @@ function mobileHeader({ title = "", back = "", close = "", main = false } = {}) 
 					</form>
 				</div>
 				<div class="mobile-main-row" data-mobile-main>
-					<a class="brand-link" href="${routeUrl("/")}" data-route="/"><img src="${assets.logo}" alt="COMMUNITY_PROJECT" /></a>
+					<a class="brand-link" href="${routeUrl("/")}" data-route="/" aria-label="단풍바람 14기 홈">${brandMark()}</a>
 					<div class="mobile-header__actions">
 						<button class="icon-button" type="button" data-open-search aria-label="검색 열기">${icons.search}</button>
 						<a class="icon-button" href="${routeUrl("/member/admin-team")}" data-route="/member/admin-team" aria-label="운영팀 한마디">${icons.megaphone}</a>
@@ -280,7 +280,7 @@ function shell(content, { mobileTitle = "", main = false, back = "", close = "",
 }
 
 function renderHome() {
-	document.title = "ACTIVITY_RECAP - COMMUNITY_PROJECT";
+	document.title = "단풍바람 14기";
 	const query = (new URLSearchParams(location.search).get("q") ?? "").trim();
 	const normalized = query.toLocaleLowerCase("ko-KR");
 	const matchingSettlements = normalized
@@ -318,7 +318,7 @@ function renderHome() {
 }
 
 function renderShorts() {
-	document.title = "강민의 ACTIVITY_RECAP Shorts";
+	document.title = "강민의 단풍바람 14기 Shorts";
 	const requestedId = new URLSearchParams(location.search).get("item");
 	const initialIndex = Math.max(0, settlements.findIndex((item) => item.id === requestedId));
 	const liked = new Set(readJson("msgs14-demo-likes", []));
@@ -461,7 +461,7 @@ function channelToolbar() {
 }
 
 function renderMember() {
-	document.title = "강민 - ACTIVITY_RECAP";
+	document.title = "강민 - 단풍바람 14기";
 	const order = new URLSearchParams(location.search).get("sort") === "oldest" ? "oldest" : "latest";
 	const items = order === "oldest" ? [...settlements].reverse() : settlements;
 	app.innerHTML = shell(`
@@ -492,7 +492,7 @@ function renderMember() {
 }
 
 function renderAdminTeam() {
-	document.title = "운영팀 한마디 - COMMUNITY_PROJECT";
+	document.title = "운영팀 한마디 - 단풍바람 14기";
 	app.innerHTML = shell(`
 		<section class="channel-view">
 			${channelToolbar()}
@@ -500,7 +500,7 @@ function renderAdminTeam() {
 				<div class="channel-banner channel-banner--team"></div>
 				<div class="channel-header">
 					<div class="profile-avatar profile-avatar--team">${icons.megaphone}</div>
-					<div class="channel-copy"><strong>COMMUNITY_PROJECT 운영팀</strong><span>@운영팀</span><small>COHORT · 가천대학교 · 운영팀</small><small>한마디 1개</small></div>
+					<div class="channel-copy"><strong>단풍바람 14기 운영팀</strong><span>@운영팀</span><small>14기 · 가천대학교 · 운영팀</small><small>한마디 1개</small></div>
 				</div>
 				<div class="channel-tabs"><span>홈</span><strong>한마디</strong></div>
 				<div class="team-feed">
@@ -526,7 +526,7 @@ function renderTeamMessage() {
 					<div><dt>직책</dt><dd>${teamMessage.role}</dd></div>
 					<div><dt>상세 내용</dt><dd>${teamMessage.content}</dd></div>
 				</dl>
-				<img class="detail-logo" src="${assets.logo}" alt="COMMUNITY_PROJECT" />
+				${brandMark("brand-mark--detail")}
 			</article>
 		</section>
 	`, { bottom: false, mobileHeaderVisible: false });
@@ -534,12 +534,12 @@ function renderTeamMessage() {
 }
 
 function renderTalk() {
-	document.title = "ACTIVITY_RECAP 톡 - COMMUNITY_PROJECT";
+	document.title = "단풍바람 14기 톡";
 	const comments = readJson("msgs14-demo-comments", []);
 	const user = demoUser();
 	app.innerHTML = shell(`
 		<section class="talk-page">
-			<header class="talk-title"><a class="icon-button" href="${routeUrl("/")}" data-route="/" aria-label="뒤로가기">${icons.back}</a><strong>ACTIVITY_RECAP 톡</strong>${user ? '<button type="button" data-logout>로그아웃</button>' : "<span></span>"}</header>
+			<header class="talk-title"><a class="icon-button" href="${routeUrl("/")}" data-route="/" aria-label="뒤로가기">${icons.back}</a><strong>단풍바람 14기 톡</strong>${user ? '<button type="button" data-logout>로그아웃</button>' : "<span></span>"}</header>
 			<div class="talk-count"><strong>톡</strong><span>${comments.length}</span></div>
 			<div class="comment-list">
 				${comments.length ? comments.map((comment) => `
@@ -564,22 +564,22 @@ function renderTalk() {
 }
 
 function renderLogin() {
-	document.title = "로그인 - COMMUNITY_PROJECT";
+	document.title = "로그인 - 단풍바람 14기";
 	const next = normalizeAppRoute(new URLSearchParams(location.search).get("next"), "/");
 	app.innerHTML = shell(`
 		<main class="auth-page">
 			<section class="auth-card">
-				<img src="${assets.logo}" alt="COMMUNITY_PROJECT" />
+				${brandMark("brand-mark--auth")}
 				<form class="auth-form" data-login-form>
 					<div class="auth-input-group">
 						<input name="name" maxlength="3" autocomplete="name" placeholder="이름" aria-label="이름" />
 						<input name="studentId" inputmode="numeric" maxlength="9" placeholder="학번" aria-label="학번" />
 					</div>
-					<button class="primary-button" type="submit">ACTIVITY_RECAP 입장</button>
+					<button class="primary-button" type="submit">14기 페이지 입장</button>
 					<label class="check-row"><input type="checkbox" name="remember" /><span>이름 저장</span></label>
 				</form>
 			</section>
-			<p class="auth-footer">COMMUNITY_PROJECT 회원이 이용 가능한 서비스입니다.</p>
+			<p class="auth-footer">단풍바람 14기 회원이 이용 가능한 서비스입니다.</p>
 		</main>
 	`, { bottom: false, contentClass: "content--auth", mobileHeaderVisible: false });
 	bindShellEvents();
@@ -599,7 +599,7 @@ function renderLogin() {
 }
 
 function renderSignup() {
-	document.title = "회원가입 - COMMUNITY_PROJECT";
+	document.title = "회원가입 - 단풍바람 14기";
 	app.innerHTML = shell(`
 		<main class="auth-page">
 			<section class="auth-card">
@@ -630,11 +630,11 @@ function renderSignup() {
 }
 
 function renderAuthCallback() {
-	document.title = "로그인 확인 - COMMUNITY_PROJECT";
+	document.title = "로그인 확인 - 단풍바람 14기";
 	app.innerHTML = shell(`
 		<main class="auth-page">
 			<section class="auth-card">
-				<img src="${assets.logo}" alt="COMMUNITY_PROJECT" />
+				${brandMark("brand-mark--auth")}
 				<h1>로그인 확인</h1>
 				<p class="auth-intro">실제 서비스에서는 이 화면에서 로그인 정보를 확인합니다.<br />체험판은 서버에 연결하지 않습니다.</p>
 				<a class="primary-button" href="${routeUrl("/login")}" data-route="/login">체험 로그인으로 이동</a>
@@ -652,10 +652,10 @@ function renderSave() {
 			<section class="save-content">
 				<p>내 캐릭터 카드를 저장해 보세요!</p>
 				<article class="save-card" id="save-card">
-					<img class="save-card__logo" src="${assets.logoWhite}" alt="COMMUNITY_PROJECT" />
+					${brandMark("brand-mark--inverse save-card__brand")}
 					<div class="save-card__scene">
 						<img class="save-card__character" src="${assets.avatar}" alt="강민" />
-						<div class="save-card__copy"><strong>강민</strong><span>에오스 · 마가다락방 · 제로</span><img src="${assets.generation}" alt="단풍바람 13기" /></div>
+						<div class="save-card__copy"><strong>강민</strong><span>에오스 · 마가다락방 · 제로</span><span class="generation-badge">단풍바람 14기</span></div>
 					</div>
 				</article>
 				<button class="save-button" type="button" data-save-card>${icons.download}<span>저장하기</span></button>
@@ -694,7 +694,7 @@ async function downloadCard() {
 		context.font = "36px sans-serif";
 		context.fillText("에오스 · 마가다락방 · 제로", canvas.width / 2, 970);
 		context.font = "28px sans-serif";
-		context.fillText("COMMUNITY_PROJECT · ACTIVITY_RECAP", canvas.width / 2, 1080);
+		context.fillText("단풍바람 14기 · 강민의 결산", canvas.width / 2, 1080);
 		canvas.toBlob((blob) => {
 			if (!blob) {
 				showToast("카드를 저장하지 못했습니다.");
@@ -703,7 +703,7 @@ async function downloadCard() {
 			const link = document.createElement("a");
 			const objectUrl = URL.createObjectURL(blob);
 			link.href = objectUrl;
-			link.download = "강민-activity-recap.png";
+			link.download = "강민-단풍바람14기.png";
 			link.click();
 			window.setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
 			showToast("캐릭터 카드를 저장했습니다.");

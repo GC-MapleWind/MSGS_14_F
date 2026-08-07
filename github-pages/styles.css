@@ -188,23 +188,27 @@ svg {
 	padding: 8px;
 }
 
-.brand-link img {
-	width: auto;
-	height: 18px;
+.brand-mark {
+	display: inline-flex;
+	align-items: baseline;
+	gap: 6px;
+	color: var(--text);
+	font-size: 18px;
+	font-style: normal;
+	font-weight: 800;
+	letter-spacing: -0.05em;
+	line-height: 1;
 }
 
-html.theme-dark .brand-link img,
-html.theme-dark .detail-logo,
-html.theme-dark .auth-card > img {
-	filter: invert(1);
+.brand-mark strong,
+.brand-mark b {
+	font: inherit;
 }
 
-@media (prefers-color-scheme: dark) {
-	html:not(.theme-light) .brand-link img,
-	html:not(.theme-light) .detail-logo,
-	html:not(.theme-light) .auth-card > img {
-		filter: invert(1);
-	}
+.brand-mark b {
+	color: #ff7a2f;
+	font-size: 12px;
+	letter-spacing: -0.02em;
 }
 
 .search {
@@ -1434,9 +1438,7 @@ html.theme-dark .auth-card > img {
 	line-height: 1.65;
 }
 
-.detail-logo {
-	width: 150px;
-	height: auto;
+.brand-mark--detail {
 	margin-top: 38px;
 	opacity: 0.45;
 }
@@ -1634,10 +1636,13 @@ html.theme-dark .auth-card > img {
 	transform: translateY(19px);
 }
 
-.auth-card > img {
-	width: auto;
-	height: 40px;
+.auth-card > .brand-mark {
+	font-size: 32px;
 	margin-bottom: 64px;
+}
+
+.auth-card > .brand-mark b {
+	font-size: 19px;
 }
 
 .auth-card h1 {
@@ -1817,11 +1822,17 @@ html.theme-dark .auth-card > img {
 	box-shadow: 0 20px 52px rgb(0 0 0 / 42%);
 }
 
-.save-card__logo {
-	width: 132px;
-	height: 18px;
+.brand-mark--inverse {
+	color: #fff;
+}
+
+.brand-mark--inverse b {
+	color: #fff1d9;
+}
+
+.save-card__brand {
 	margin: 4px auto 8px;
-	object-fit: contain;
+	font-size: 17px;
 }
 
 .save-card__scene {
@@ -1865,11 +1876,16 @@ html.theme-dark .auth-card > img {
 	font-size: 12px;
 }
 
-.save-card__copy img {
-	width: 118px;
-	height: 28px;
+.generation-badge {
 	margin-top: 8px;
-	object-fit: contain;
+	padding: 5px 10px;
+	border: 1px solid rgb(255 255 255 / 65%);
+	border-radius: 999px;
+	background: rgb(0 0 0 / 14%);
+	color: #fff;
+	font-size: 11px !important;
+	font-weight: 700;
+	letter-spacing: -0.02em;
 }
 
 .save-button {
@@ -2274,10 +2290,13 @@ html.theme-dark .auth-card > img {
 		border-inline: 0;
 	}
 
-	.auth-card > img {
-		width: 210px;
-		height: auto;
+	.auth-card > .brand-mark {
+		font-size: 28px;
 		margin-bottom: 48px;
+	}
+
+	.auth-card > .brand-mark b {
+		font-size: 17px;
 	}
 
 	.auth-card {

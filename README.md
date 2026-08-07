@@ -1,6 +1,6 @@
-# MSGS_14 Frontend
+# 단풍바람 14기 Frontend
 
-COMMUNITY_PROJECT 활동 기록을 YouTube Shorts 형태로 탐색하는 SvelteKit 프론트엔드입니다.
+단풍바람 14기 활동 기록을 YouTube Shorts 형태로 탐색하는 SvelteKit 프론트엔드입니다.
 
 ## 주요 기능
 

@@ -1,4 +1,4 @@
-# ACTIVITY_RECAP Shorts demo
+# 단풍바람 14기 Shorts demo
 
 This directory is an independent static GitHub Pages demo of the current
 YouTube Shorts-style frontend. It does not modify or depend on the local

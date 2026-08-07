@@ -690,7 +690,7 @@ svg {
 	object-fit: cover;
 }
 
-@media (min-width: 1024px) {
+@media (min-width: 768px), (hover: hover) and (pointer: fine) {
 	.short__image {
 		object-fit: contain;
 		object-position: center;

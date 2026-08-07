@@ -20,7 +20,7 @@ const requiredFiles = [
 await Promise.all(requiredFiles.map((file) => access(resolve(source, file))));
 
 const indexHtml = await readFile(resolve(source, "index.html"), "utf8");
-for (const reference of ["styles.css?v=11", "app.js?v=11"]) {
+for (const reference of ["styles.css?v=12", "app.js?v=12"]) {
   if (!indexHtml.includes(reference)) {
     throw new Error(`Missing production asset reference: ${reference}`);
   }

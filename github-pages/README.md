@@ -23,3 +23,11 @@ Open the directory through an HTTP server for local verification:
 ```bash
 python3 -m http.server 4173 --directory github-pages
 ```
+
+Create the exact deployable artifact locally with:
+
+```bash
+npm run check
+npm run build
+python3 -m http.server 4173 --directory dist
+```

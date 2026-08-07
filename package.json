@@ -1,0 +1,10 @@
+{
+  "name": "msgs-14-f-pages",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/build-pages.mjs",
+    "check": "node --check github-pages/app.js && node scripts/build-pages.mjs --check"
+  }
+}

@@ -16,7 +16,7 @@ export function openMyPage() {
 	}
 }
 
-/** 전체 결산 중 하나를 무작위로 골라 쇼츠 딥링크로 이동한다. */
+/** 전체 결산을 무작위로 계속 이어 보는 자유 재생 피드를 연다. */
 export async function openRandomSettlement() {
 	if (randomNavigationInFlight) return;
 	randomNavigationInFlight = true;
@@ -28,7 +28,9 @@ export async function openRandomSettlement() {
 			return;
 		}
 
-		await goto(`/shorts/${settlement.characterId}?item=${settlement.id}`);
+		await goto(
+			`/shorts/${settlement.characterId}?item=${settlement.id}&mode=random`
+		);
 	} catch (error) {
 		console.error('Failed to open a random settlement:', error);
 		toast.show('자유 재생을 시작하지 못했습니다.');

@@ -22,19 +22,27 @@
 	import SettlementCommentsSheet from "$lib/components/SettlementCommentsSheet.svelte";
 	import {
 		getCharacterById,
+		getRandomSettlement,
+		getSettlementById,
 		getSettlementsByCharacterIdPaginated,
 	} from "$lib/api";
 	import { handleImageError } from "$lib/utils/image";
 	import { toast } from "$lib/stores/toast";
 	import type { Character, SettlementItem } from "$lib/types";
+	type FeedSettlement = SettlementItem & { feedKey: string };
 
 	const characterId = $derived($page.params.id ?? "");
 	const deepLinkItemId = $derived($page.url.searchParams.get("item"));
+	const randomFeedRequested = $derived(
+		$page.url.searchParams.get("mode") === "random",
+	);
 
 	let character = $state<Character | null>(null);
-	let settlements = $state<SettlementItem[]>([]);
+	let charactersById = $state<Record<string, Character>>({});
+	let settlements = $state<FeedSettlement[]>([]);
 	let total = $state(0);
 	let hasMore = $state(true);
+	let randomFeedActive = $state(false);
 	let pageNum = $state(1);
 	const limit = 10;
 	let loading = $state(true);
@@ -45,6 +53,7 @@
 	let currentIndex = $state(0);
 	let loadedRequestKey = "";
 	let dataLoadVersion = 0;
+	let feedSequence = 0;
 	let audioElement = $state<HTMLAudioElement | null>(null);
 	let isAudioMuted = $state(false);
 	let audioNeedsInteraction = $state(false);
@@ -65,9 +74,17 @@
 			Math.min(currentIndex, Math.max(settlements.length - 1, 0))
 		] ?? null,
 	);
+	const currentItemCharacter = $derived(
+		currentItem
+			? charactersById[currentItem.characterId] ??
+				(currentItem.characterId === character?.id ? character : null)
+			: character,
+	);
 	const feedProgress = $derived(
 		Math.min(currentIndex + 1, settlements.length) /
-			(total || settlements.length || 1),
+			(randomFeedActive
+				? settlements.length || 1
+				: total || settlements.length || 1),
 	);
 	const visibleProgress = $derived(
 		currentItem?.audioUrl ? audioProgress : feedProgress,
@@ -396,20 +413,21 @@
 		}
 	}
 
-	function getSettlementElement(itemId: string): HTMLElement | null {
+	function getSettlementElement(feedKey: string): HTMLElement | null {
 		const elements =
 			scrollContainer?.querySelectorAll<HTMLElement>(
-				"[data-settlement-id]",
+				"[data-feed-key]",
 			) ?? [];
 		return (
 			[...elements].find(
-				(element) => element.dataset.settlementId === itemId,
+				(element) => element.dataset.feedKey === feedKey,
 			) ?? null
 		);
 	}
 
 	function getSettlementShareUrl(item: SettlementItem): string {
 		const url = new URL(window.location.href);
+		url.pathname = `/shorts/${item.characterId}`;
 		url.search = "";
 		url.hash = "";
 		url.searchParams.set("item", item.id);
@@ -417,7 +435,9 @@
 	}
 
 	function getSettlementFilename(item: SettlementItem): string {
-		const nickname = character?.nickname || character?.name || "멤버";
+		const itemCharacter = getCharacterForItem(item);
+		const nickname =
+			itemCharacter?.nickname || itemCharacter?.name || "멤버";
 		const date = item.acquiredAt.replaceAll("-", "");
 		const rawName = `단풍바람14기-${nickname}-${date}-${item.title}`;
 		const safeName = rawName
@@ -448,8 +468,8 @@
 		);
 	}
 
-	async function createSettlementFile(item: SettlementItem): Promise<File> {
-		const element = getSettlementElement(item.id);
+	async function createSettlementFile(item: FeedSettlement): Promise<File> {
+		const element = getSettlementElement(item.feedKey);
 		if (!element) {
 			throw new Error("Settlement export target was not found");
 		}
@@ -479,13 +499,33 @@
 		}
 	}
 
-	function uniqueById<T extends { id: string }>(items: T[]): T[] {
-		const seen = new Set<string>();
-		return items.filter((item) => {
-			if (seen.has(item.id)) return false;
-			seen.add(item.id);
-			return true;
-		});
+	function createFeedSettlement(item: SettlementItem): FeedSettlement {
+		feedSequence += 1;
+		return { ...item, feedKey: `${item.id}-${feedSequence}` };
+	}
+
+	function getCharacterForItem(item: SettlementItem): Character | null {
+		return (
+			charactersById[item.characterId] ??
+			(item.characterId === character?.id ? character : null)
+		);
+	}
+
+	async function ensureItemCharacter(
+		item: SettlementItem,
+		requestVersion = dataLoadVersion,
+	): Promise<Character | null> {
+		const cached = charactersById[item.characterId];
+		if (cached) return cached;
+
+		const loadedCharacter = await getCharacterById(item.characterId);
+		if (requestVersion !== dataLoadVersion || !loadedCharacter) return null;
+
+		charactersById = {
+			...charactersById,
+			[item.characterId]: loadedCharacter,
+		};
+		return loadedCharacter;
 	}
 
 	async function loadMore(
@@ -509,7 +549,11 @@
 			);
 			if (requestVersion !== dataLoadVersion) return false;
 
-			settlements = uniqueById([...settlements, ...result.items]);
+			const existingIds = new Set(settlements.map((item) => item.id));
+			const additions = result.items
+				.filter((item) => !existingIds.has(item.id))
+				.map(createFeedSettlement);
+			settlements = [...settlements, ...additions];
 			total = result.total;
 			hasMore =
 				settlements.length < result.total && result.items.length > 0;
@@ -531,6 +575,58 @@
 		}
 	}
 
+	async function loadRandomItems(
+		count = 4,
+		requestVersion = dataLoadVersion,
+	): Promise<boolean> {
+		if (requestVersion !== dataLoadVersion || loadingMore) return false;
+
+		loadingMore = true;
+		let added = 0;
+		try {
+			let previousId = settlements[settlements.length - 1]?.id ?? null;
+			for (let index = 0; index < count; index += 1) {
+				let fallback: SettlementItem | null = null;
+				let nextItem: SettlementItem | null = null;
+
+				// 바로 직전 결산만 반복되는 경우를 피하되, 데이터가 하나뿐이면
+				// 같은 결산도 허용해 피드가 멈추지 않게 한다.
+				for (let attempt = 0; attempt < 5; attempt += 1) {
+					const candidate = await getRandomSettlement();
+					if (requestVersion !== dataLoadVersion) return false;
+					if (!candidate) break;
+					fallback ??= candidate;
+					if (candidate.id !== previousId) {
+						nextItem = candidate;
+						break;
+					}
+				}
+
+				nextItem ??= fallback;
+				if (!nextItem) break;
+
+				await ensureItemCharacter(nextItem, requestVersion);
+				if (requestVersion !== dataLoadVersion) return false;
+				settlements = [
+					...settlements,
+					createFeedSettlement(nextItem),
+				];
+				previousId = nextItem.id;
+				added += 1;
+			}
+			return added > 0;
+		} catch (randomError) {
+			if (requestVersion === dataLoadVersion) {
+				console.error("Failed to extend random shorts feed:", randomError);
+			}
+			return false;
+		} finally {
+			if (requestVersion === dataLoadVersion) {
+				loadingMore = false;
+			}
+		}
+	}
+
 	function scrollToIndex(index: number, smooth = false) {
 		if (!scrollContainer) return;
 		scrollContainer.scrollTo({
@@ -542,19 +638,47 @@
 	async function loadData() {
 		const requestCharacterId = characterId;
 		const requestItemId = deepLinkItemId;
+		const requestRandomFeed = randomFeedRequested;
 		const requestVersion = ++dataLoadVersion;
 
 		loading = true;
 		loadingMore = false;
 		error = null;
 		settlements = [];
+		charactersById = {};
 		pageNum = 1;
 		hasMore = true;
+		randomFeedActive = requestRandomFeed;
 		currentIndex = 0;
+		feedSequence = 0;
 		loadLikedIds();
 		loadAudioPreference();
 
 		try {
+			if (requestRandomFeed) {
+				const initialItem = requestItemId
+					? await getSettlementById(requestItemId)
+					: await getRandomSettlement();
+				if (requestVersion !== dataLoadVersion) return;
+				if (!initialItem) {
+					error = "재생할 결산이 없습니다.";
+					return;
+				}
+
+				const initialCharacter = await ensureItemCharacter(
+					initialItem,
+					requestVersion,
+				);
+				if (requestVersion !== dataLoadVersion) return;
+				character = initialCharacter;
+				settlements = [createFeedSettlement(initialItem)];
+				total = 0;
+				hasMore = false;
+				loading = false;
+				void loadRandomItems(4, requestVersion);
+				return;
+			}
+
 			const loadedCharacter = await getCharacterById(
 				requestCharacterId,
 			);
@@ -565,6 +689,9 @@
 				error = "캐릭터를 찾을 수 없습니다.";
 				return;
 			}
+			charactersById = {
+				[loadedCharacter.id]: loadedCharacter,
+			};
 
 			await loadMore(requestCharacterId, requestVersion);
 			if (requestVersion !== dataLoadVersion) return;
@@ -608,7 +735,7 @@
 	}
 
 	$effect(() => {
-		const requestKey = `${characterId}:${deepLinkItemId ?? ""}`;
+		const requestKey = `${characterId}:${deepLinkItemId ?? ""}:${randomFeedRequested}`;
 		if (!characterId || loadedRequestKey === requestKey) return;
 		loadedRequestKey = requestKey;
 		void loadData();
@@ -649,6 +776,11 @@
 		// 애니메이션 중 새 제스처가 오면 이동 목표 기준으로 다음 장 계산
 		const base = wheelTargetIndex ?? currentIndex;
 		const direction = e.deltaY > 0 ? 1 : -1;
+		if (direction > 0 && base >= settlements.length - 1) {
+			wheelConsumed = true;
+			void scrollToNext();
+			return;
+		}
 		const maxIndex = settlements.length - 1 + (loadingMore ? 1 : 0);
 		const nextIndex = Math.min(Math.max(base + direction, 0), maxIndex);
 		if (nextIndex === base) return;
@@ -745,19 +877,48 @@
 		};
 	});
 
-	// 끝에서 3장 이내로 접근하면 다음 페이지 로드
+	// 현재 회원의 마지막 결산 뒤에는 전체 결산 랜덤 피드를 계속 이어 붙인다.
 	$effect(() => {
 		if (
-			!loading &&
-			hasMore &&
-			settlements.length > 0 &&
-			currentIndex >= settlements.length - 3
-		) {
-			void loadMore();
+			loading ||
+			loadingMore ||
+			settlements.length === 0 ||
+			currentIndex < settlements.length - 3
+		) return;
+
+		if (randomFeedActive) {
+			void loadRandomItems();
+			return;
 		}
+
+		if (hasMore) {
+			void loadMore();
+			return;
+		}
+
+		randomFeedActive = true;
+		void loadRandomItems();
 	});
 
-	async function saveSettlement(item: SettlementItem) {
+	async function scrollToNext() {
+		const requestedIndex = currentIndex + 1;
+		if (requestedIndex >= settlements.length && !loadingMore) {
+			if (!randomFeedActive && hasMore) {
+				await loadMore();
+			}
+			if (requestedIndex >= settlements.length) {
+				randomFeedActive = true;
+				await loadRandomItems(1);
+			}
+		}
+
+		await tick();
+		if (requestedIndex < settlements.length) {
+			scrollToIndex(requestedIndex, true);
+		}
+	}
+
+	async function saveSettlement(item: FeedSettlement) {
 		if (exportingSettlementId) return;
 		exportingSettlementId = item.id;
 		try {
@@ -780,14 +941,15 @@
 		);
 	}
 
-	async function shareSettlement(item: SettlementItem) {
+	async function shareSettlement(item: FeedSettlement) {
 		if (exportingSettlementId) return;
 		exportingSettlementId = item.id;
 		const shareUrl = getSettlementShareUrl(item);
 
 		try {
 			const file = await createSettlementFile(item);
-			const shareTitle = `${character?.nickname ?? "단풍바람 14기"} · ${item.title}`;
+			const itemCharacter = getCharacterForItem(item);
+			const shareTitle = `${itemCharacter?.nickname ?? "단풍바람 14기"} · ${item.title}`;
 			const shareText = `${item.title}\n${formatDate(item.acquiredAt)}`;
 			const canShareFile =
 				typeof navigator.canShare === "function" &&
@@ -873,7 +1035,7 @@
 <svelte:window onkeydown={handleWindowKeydown} />
 
 <svelte:head>
-	<title>{character?.nickname ?? "Shorts"} - 단풍바람 14기 Shorts</title>
+	<title>{currentItemCharacter?.nickname ?? "Shorts"} - 단풍바람 14기 Shorts</title>
 </svelte:head>
 
 <!-- 모바일: 항상 다크 풀스크린 (m.youtube.com/shorts 실측) / 데스크톱: 테마 배경 위 중앙 플레이어 -->
@@ -930,7 +1092,7 @@
 				<a href="/" class="flex items-center" aria-label="홈으로">
 					<img
 						src="/images/logos/logo-text-mono.svg"
-						alt="COMMUNITY_PROJECT"
+						alt="단풍바람"
 						class="h-[16px] object-contain invert"
 						draggable="false"
 					/>
@@ -998,7 +1160,7 @@
 					현재 결산 링크 복사
 				</button>
 				<a
-					href="/member/{characterId}"
+					href="/member/{currentItem?.characterId ?? characterId}"
 					class="flex w-full items-center gap-3 px-4 py-3 text-sm active:bg-white/10"
 					role="menuitem"
 				>
@@ -1068,9 +1230,10 @@
 					role="presentation"
 					class="h-full flex flex-col overflow-y-auto overflow-x-hidden snap-y snap-mandatory no-scrollbar"
 				>
-				{#each settlements as item, index (item.id)}
+				{#each settlements as item, index (item.feedKey)}
+					{@const itemCharacter = getCharacterForItem(item)}
 					<section
-						data-settlement-id={item.id}
+						data-feed-key={item.feedKey}
 						class="relative w-full h-full shrink-0 snap-center snap-always overflow-hidden bg-black text-white"
 					>
 						<!-- 데스크톱 배경: 전체 이미지 바깥 영역만 블러로 채움 -->
@@ -1144,19 +1307,19 @@
 						{/if}
 
 						<!-- 채널 행: 아바타 + @핸들 + 구독 필 (실측 bottom 85px) -->
-						{#if character}
+						{#if itemCharacter}
 							<div
 								class="absolute left-4 right-[72px] bottom-[85px] z-10 flex items-center gap-2.5"
 							>
 								<a
-									href="/member/{characterId}"
+									href="/member/{item.characterId}"
 									class="flex items-center gap-2.5 min-w-0"
 								>
 									<div
 										class="w-10 h-10 rounded-full overflow-hidden bg-white/10 shrink-0"
 									>
 										<img
-											src={character.avatarUrl}
+											src={itemCharacter.avatarUrl}
 											alt=""
 											aria-hidden="true"
 											onerror={handleImageError}
@@ -1165,11 +1328,11 @@
 									</div>
 									<span
 										class="text-[15px] font-medium drop-shadow truncate"
-										>@{character.nickname}</span
+										>@{itemCharacter.nickname}</span
 									>
 								</a>
 								<a
-									href="/member/{characterId}"
+									href="/member/{item.characterId}"
 									class="shrink-0 h-9 px-4 flex items-center rounded-full bg-white text-black text-[14px] font-medium"
 								>
 									구독
@@ -1257,14 +1420,14 @@
 						</div>
 
 						<!-- 사운드 디스크 자리: 아바타 프로필 (실측 40px, right 12px, bottom 27px) -->
-						{#if character}
+						{#if itemCharacter}
 							<a
-								href="/member/{characterId}"
+								href="/member/{item.characterId}"
 								class="lg:hidden absolute right-3 bottom-[27px] z-10 w-10 h-10 rounded-lg overflow-hidden border-2 border-white/70 bg-white/10"
 								aria-label="프로필"
 							>
 								<img
-									src={character.avatarUrl}
+									src={itemCharacter.avatarUrl}
 									alt=""
 									aria-hidden="true"
 									onerror={handleImageError}
@@ -1355,14 +1518,14 @@
 						</button>
 						<span class="text-xs text-yt-text">공유</span>
 					</div>
-					{#if character}
+					{#if currentItemCharacter}
 						<a
-							href="/member/{characterId}"
+							href="/member/{currentItem.characterId}"
 							class="w-10 h-10 mt-1 rounded-lg overflow-hidden border border-yt-border bg-yt-surface"
 							aria-label="프로필"
 						>
 							<img
-								src={character.avatarUrl}
+								src={currentItemCharacter.avatarUrl}
 								alt=""
 								aria-hidden="true"
 								onerror={handleImageError}
@@ -1389,15 +1552,8 @@
 				</button>
 				<button
 					type="button"
-					onclick={() =>
-						scrollToIndex(
-							Math.min(
-								currentIndex + 1,
-								settlements.length - 1,
-							),
-							true,
-						)}
-					disabled={currentIndex >= settlements.length - 1}
+					onclick={() => void scrollToNext()}
+					disabled={loadingMore && currentIndex >= settlements.length - 1}
 					class="w-12 h-12 rounded-full bg-yt-surface hover:bg-yt-surface-hover text-yt-text disabled:opacity-40 flex items-center justify-center"
 					aria-label="다음 결산"
 				>

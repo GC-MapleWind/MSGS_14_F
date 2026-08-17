@@ -147,7 +147,7 @@ export const settlementItems: SettlementItem[] = [
 	{
 		id: 'msg-1',
 		characterId: 'char-1',
-		title: 'ACTIVITY_RECAP 내용(제목으로 사용)',
+		title: '결산 내용(제목으로 사용)',
 		description:
 			'길드원들과 함께한 보스레이드 최초 클리어! 모두가 힘을 합쳐 드디어 데미안을 처치했습니다. 정말 감격스러운 순간이었어요.',
 		imageUrl: 'https://placehold.co/400x300/FFE0B2/ff8e42?text=BOSS+CLEAR',

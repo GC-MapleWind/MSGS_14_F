@@ -196,7 +196,7 @@
 						</div>
 					{/if}
 					<Button
-						label="ACTIVITY_RECAP 입장"
+						label="로그인"
 						variant="primary"
 						buttonState={isLoading ? "disabled" : "default"}
 						onClick={handleLogin}

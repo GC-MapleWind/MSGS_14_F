@@ -340,7 +340,7 @@ export async function getCharacterById(id: string): Promise<Character | null> {
 }
 
 /**
- * 특정 캐릭터의 ACTIVITY_RECAP 목록 조회
+ * 특정 캐릭터의 결산 목록 조회
  */
 export async function getSettlementsByCharacterId(characterId: string): Promise<SettlementItem[]> {
 	const data = await apiCall<SettlementResponse[]>(
@@ -368,7 +368,7 @@ export async function getSettlementsByCharacterIdPaginated(
 }
 
 /**
- * 특정 ACTIVITY_RECAP 상세 정보 조회
+ * 특정 결산 상세 정보 조회
  */
 export async function getSettlementById(id: string): Promise<SettlementItem | null> {
 	try {

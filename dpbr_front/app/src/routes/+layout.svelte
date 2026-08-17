@@ -42,12 +42,11 @@
 	const currentPath = $derived(normalizePath($page.url.pathname));
 	const isLoginRoute = $derived(currentPath.startsWith("/login"));
 	const isSignupRoute = $derived(currentPath.startsWith("/auth/signup"));
-	// 쇼츠 뷰어·저장·로그인 등 풀스크린 화면에서는 하단 네비게이션 숨김
+	// 쇼츠 뷰어·로그인 등 풀스크린 화면에서는 하단 네비게이션 숨김
 	const showBottomNav = $derived(
 		!currentPath.startsWith("/shorts") &&
 			!currentPath.startsWith("/login") &&
-			!currentPath.startsWith("/auth") &&
-			!currentPath.endsWith("/save"),
+			!currentPath.startsWith("/auth"),
 	);
 	let hasCheckedAuth = $state(false);
 	let navigationInFlight = false;

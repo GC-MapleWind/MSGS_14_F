@@ -4,6 +4,8 @@
 	import { Search, EllipsisVertical, ArrowLeft } from "lucide-svelte";
 	import ShortsThumbnail from "$lib/components/ShortsThumbnail.svelte";
 	import TeamMessageListItem from "$lib/components/TeamMessageListItem.svelte";
+	import { toast } from "$lib/stores/toast";
+	import { downloadBlob } from "$lib/utils/capture";
 	import {
 		getAdminCharacter,
 		getCharacterById,
@@ -58,6 +60,7 @@
 	let teamMessages = $state<TeamMessageItem[]>([]);
 	let loading = $state(true);
 	let error = $state<string | null>(null);
+	let imageSaving = $state(false);
 
 	let scrollContainer = $state<HTMLDivElement | null>(null);
 	let restoredScrollTop = 0;
@@ -81,6 +84,55 @@
 			seen.add(item.id);
 			return true;
 		});
+	}
+
+	function getImageExtension(blob: Blob, sourceUrl: string): string {
+		const extensionByMimeType: Record<string, string> = {
+			"image/avif": "avif",
+			"image/gif": "gif",
+			"image/jpeg": "jpg",
+			"image/png": "png",
+			"image/svg+xml": "svg",
+			"image/webp": "webp",
+		};
+		const mimeExtension = extensionByMimeType[blob.type.toLowerCase()];
+		if (mimeExtension) return mimeExtension;
+
+		const pathExtension = new URL(sourceUrl, location.href).pathname
+			.split(".")
+			.pop()
+			?.toLowerCase();
+		return pathExtension && /^(avif|gif|jpe?g|png|svg|webp)$/.test(pathExtension)
+			? pathExtension.replace("jpeg", "jpg")
+			: "png";
+	}
+
+	async function saveCharacterImage() {
+		if (!character || imageSaving) return;
+
+		imageSaving = true;
+		try {
+			const response = await fetch(character.avatarUrl, { cache: "no-store" });
+			if (!response.ok) {
+				throw new Error(`Image request failed: ${response.status}`);
+			}
+
+			const blob = await response.blob();
+			const safeNickname = (character.nickname || character.name)
+				.replace(/[^a-zA-Z0-9가-힣_-]+/g, "-")
+				.replace(/^-|-$/g, "");
+			const extension = getImageExtension(blob, character.avatarUrl);
+			downloadBlob(
+				blob,
+				`단풍바람14기-${safeNickname || "캐릭터"}.${extension}`,
+			);
+			toast.show("캐릭터 이미지를 저장했습니다.");
+		} catch (saveError) {
+			console.error("Character image save failed:", saveError);
+			toast.show("캐릭터 이미지 저장에 실패했습니다.");
+		} finally {
+			imageSaving = false;
+		}
 	}
 
 	export const snapshot: Snapshot = {
@@ -359,15 +411,18 @@
 				</div>
 			</div>
 
-			<!-- 구독 버튼 자리: 14기 캐릭터 카드 저장 -->
+			<!-- 구독 버튼 자리: 캐릭터 원본 이미지 저장 -->
 			{#if !isAdminTeam}
 				<div class="px-4 pb-4">
-					<a
-						href="/member/{characterId}/save"
+					<button
+						type="button"
+						onclick={saveCharacterImage}
+						disabled={imageSaving}
 						class="flex items-center justify-center w-full h-10 rounded-full bg-yt-chip-active text-yt-chip-active-text text-sm font-medium active:opacity-80"
+						aria-busy={imageSaving}
 					>
-						14기 캐릭터 카드 저장
-					</a>
+						{imageSaving ? "이미지 저장 중..." : "캐릭터 이미지 저장"}
+					</button>
 				</div>
 			{/if}
 
@@ -425,7 +480,7 @@
 					<p class="text-yt-text-muted">
 						{isAdminTeam
 							? "운영팀 정보가 없습니다."
-							: "ACTIVITY_RECAP이 없습니다."}
+							: "등록된 결산이 없습니다."}
 					</p>
 				</div>
 			{/if}

@@ -404,12 +404,39 @@
 		if (isShortsSearchOpen) closeShortsSearch();
 	}
 
+	async function copyText(text: string): Promise<boolean> {
+		if (navigator.clipboard?.writeText) {
+			try {
+				await navigator.clipboard.writeText(text);
+				return true;
+			} catch {
+				// Insecure contexts can expose Clipboard API but reject writes.
+			}
+		}
+
+		const textarea = document.createElement("textarea");
+		textarea.value = text;
+		textarea.setAttribute("readonly", "");
+		textarea.style.position = "fixed";
+		textarea.style.opacity = "0";
+		document.body.appendChild(textarea);
+		textarea.select();
+
+		try {
+			return document.execCommand("copy");
+		} finally {
+			textarea.remove();
+		}
+	}
+
 	async function copyCurrentSettlementLink() {
 		const item = currentItem;
 		if (!item) return;
 
 		try {
-			await navigator.clipboard.writeText(getSettlementShareUrl(item));
+			if (!(await copyText(getSettlementShareUrl(item)))) {
+				throw new Error("Copy command was rejected");
+			}
 			toast.show("현재 결산 링크를 복사했습니다.");
 		} catch {
 			toast.show("링크 복사에 실패했습니다.");
@@ -1048,59 +1075,80 @@
 		if (exportingSettlementId) return;
 		exportingSettlementId = item.id;
 		const shareUrl = getSettlementShareUrl(item);
+		const itemCharacter = getCharacterForItem(item);
+		const shareTitle = `${itemCharacter?.nickname ?? "단풍바람 14기"} · ${item.title}`;
+		const shareText = `${item.title}\n${formatDate(item.acquiredAt)}`;
 
 		try {
-			const file = await createSettlementFile(item);
-			const itemCharacter = getCharacterForItem(item);
-			const shareTitle = `${itemCharacter?.nickname ?? "단풍바람 14기"} · ${item.title}`;
-			const shareText = `${item.title}\n${formatDate(item.acquiredAt)}`;
-			const canShareFile =
-				typeof navigator.canShare === "function" &&
-				navigator.canShare({ files: [file] });
-
-			if (navigator.share && canShareFile) {
-				try {
-					await navigator.share({
-						files: [file],
-						title: shareTitle,
-						text: shareText,
-						url: shareUrl,
-					});
-					return;
-				} catch (shareError) {
-					if (isShareCancelled(shareError)) return;
-					console.warn("Image share failed; using fallback:", shareError);
-				}
+			if (typeof navigator.share !== "function") {
+				const copied = await copyText(shareUrl);
+				toast.show(
+					copied
+						? "이 브라우저는 공유를 지원하지 않아 링크를 복사했습니다."
+						: "이 브라우저에서는 공유를 지원하지 않습니다.",
+				);
+				return;
 			}
 
-			if (navigator.share) {
-				try {
-					await navigator.share({
-						title: shareTitle,
-						text: shareText,
-						url: shareUrl,
-					});
-					toast.show(
-						"이미지 첨부를 지원하지 않아 링크로 공유했습니다.",
-					);
-					return;
-				} catch (shareError) {
-					if (isShareCancelled(shareError)) return;
-					console.warn("Link share failed; using fallback:", shareError);
-				}
-			}
-
-			const { downloadBlob } = await import("$lib/utils/capture");
-			downloadBlob(file, file.name);
 			try {
-				await navigator.clipboard.writeText(shareUrl);
-				toast.show("공유 이미지를 저장하고 링크를 복사했습니다.");
-			} catch {
-				toast.show("공유 이미지를 저장했습니다.");
+				const file = await createSettlementFile(item);
+				let canShareFile = false;
+				try {
+					canShareFile =
+						typeof navigator.canShare === "function" &&
+						navigator.canShare({ files: [file] });
+				} catch (shareCapabilityError) {
+					console.warn(
+						"File share capability check failed:",
+						shareCapabilityError,
+					);
+				}
+
+				if (canShareFile) {
+					try {
+						await navigator.share({
+							files: [file],
+							title: shareTitle,
+							text: `${shareText}\n${shareUrl}`,
+						});
+						return;
+					} catch (shareError) {
+						if (isShareCancelled(shareError)) return;
+						console.warn(
+							"Image share failed; using link fallback:",
+							shareError,
+						);
+					}
+				}
+			} catch (captureError) {
+				console.warn(
+					"Settlement image creation failed; using link fallback:",
+					captureError,
+				);
 			}
-		} catch (captureError) {
-			console.error("Settlement share failed:", captureError);
-			toast.show("게시글 공유 준비에 실패했습니다.");
+
+			try {
+				await navigator.share({
+					title: shareTitle,
+					text: shareText,
+					url: shareUrl,
+				});
+				toast.show("이미지 첨부를 지원하지 않아 링크로 공유했습니다.");
+				return;
+			} catch (shareError) {
+				if (isShareCancelled(shareError)) return;
+				console.warn("Link share failed; using copy fallback:", shareError);
+			}
+
+			const copied = await copyText(shareUrl);
+			toast.show(
+				copied
+					? "공유를 열지 못해 링크를 복사했습니다."
+					: "게시글 공유에 실패했습니다.",
+			);
+		} catch (shareError) {
+			console.error("Settlement share failed:", shareError);
+			toast.show("게시글 공유에 실패했습니다.");
 		} finally {
 			exportingSettlementId = null;
 		}

@@ -45,9 +45,6 @@ function brandMark(modifier = "") {
 	return `<span class="brand-mark ${modifier}"><strong>단풍바람</strong><b>14기</b></span>`;
 }
 
-const favicon = document.querySelector('link[rel="icon"]');
-if (favicon) favicon.href = assets.avatar;
-
 const icons = {
 	menu: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg>',
 	search: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m16.5 16.5 4 4"/></svg>',

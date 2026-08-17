@@ -3,10 +3,13 @@
 	import {
 		Home,
 		Megaphone,
-		Shuffle,
+		ListOrdered,
 		CircleUserRound,
 	} from "lucide-svelte";
-	import { openMyPage, openRandomSettlement } from "$lib/utils/nav";
+	import {
+		openChronologicalSettlements,
+		openMyPage,
+	} from "$lib/utils/nav";
 
 	const currentPath = $derived($page.url.pathname);
 	const itemClass =
@@ -31,12 +34,12 @@
 
 	<button
 		type="button"
-		onclick={() => void openRandomSettlement()}
-		aria-label="자유 재생: 무작위 결산 보기"
+		onclick={() => void openChronologicalSettlements()}
+		aria-label="날짜순 재생: 오래된 결산부터 보기"
 		class={`${itemClass} text-yt-text-muted`}
 	>
-		<Shuffle size={23} strokeWidth={1.8} />
-		<span class="text-[9px] leading-3 whitespace-nowrap">자유 재생</span>
+		<ListOrdered size={23} strokeWidth={1.8} />
+		<span class="text-[9px] leading-3 whitespace-nowrap">날짜순 재생</span>
 	</button>
 
 	<a

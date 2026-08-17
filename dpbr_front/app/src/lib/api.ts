@@ -350,6 +350,22 @@ export async function getSettlementsByCharacterId(characterId: string): Promise<
 	return data.map(mapSettlementResponse);
 }
 
+export async function getSettlementsPaginated(
+	page: number = 1,
+	limit: number = 10
+): Promise<{ items: SettlementItem[]; total: number; page: number; limit: number }> {
+	const data = await apiCall<SettlementsPaginationResponse>(
+		`/settlements/pagination?page=${page}&limit=${limit}`
+	);
+
+	return {
+		items: data.items.map(mapSettlementResponse),
+		total: data.total,
+		page: data.page,
+		limit: data.limit
+	};
+}
+
 export async function getSettlementsByCharacterIdPaginated(
 	characterId: string,
 	page: number = 1,

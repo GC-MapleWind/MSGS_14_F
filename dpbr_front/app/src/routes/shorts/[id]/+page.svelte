@@ -25,6 +25,7 @@
 		getRandomSettlement,
 		getSettlementById,
 		getSettlementsByCharacterIdPaginated,
+		getSettlementsPaginated,
 	} from "$lib/api";
 	import { handleImageError } from "$lib/utils/image";
 	import { toast } from "$lib/stores/toast";
@@ -36,6 +37,9 @@
 	const randomFeedRequested = $derived(
 		$page.url.searchParams.get("mode") === "random",
 	);
+	const chronologicalFeedRequested = $derived(
+		$page.url.searchParams.get("mode") === "chronological",
+	);
 
 	let character = $state<Character | null>(null);
 	let charactersById = $state<Record<string, Character>>({});
@@ -43,6 +47,7 @@
 	let total = $state(0);
 	let hasMore = $state(true);
 	let randomFeedActive = $state(false);
+	let chronologicalFeedActive = $state(false);
 	let pageNum = $state(1);
 	const limit = 10;
 	let loading = $state(true);
@@ -575,6 +580,56 @@
 		}
 	}
 
+	async function loadChronologicalPage(
+		requestVersion = dataLoadVersion,
+	): Promise<boolean> {
+		if (
+			requestVersion !== dataLoadVersion ||
+			loadingMore ||
+			!hasMore
+		) {
+			return false;
+		}
+
+		loadingMore = true;
+		try {
+			const result = await getSettlementsPaginated(pageNum, limit);
+			if (requestVersion !== dataLoadVersion) return false;
+
+			const existingIds = new Set(settlements.map((item) => item.id));
+			const additions = result.items
+				.filter((item) => !existingIds.has(item.id))
+				.map(createFeedSettlement);
+
+			for (const item of additions) {
+				await ensureItemCharacter(item, requestVersion);
+				if (requestVersion !== dataLoadVersion) return false;
+			}
+
+			settlements = [...settlements, ...additions];
+			total = result.total;
+			hasMore =
+				settlements.length < result.total && result.items.length > 0;
+			if (result.items.length > 0) {
+				pageNum += 1;
+			}
+			return additions.length > 0;
+		} catch (chronologicalError) {
+			if (requestVersion === dataLoadVersion) {
+				console.error(
+					"Failed to extend chronological shorts feed:",
+					chronologicalError,
+				);
+			}
+			if (settlements.length === 0) hasMore = false;
+			return false;
+		} finally {
+			if (requestVersion === dataLoadVersion) {
+				loadingMore = false;
+			}
+		}
+	}
+
 	async function loadRandomItems(
 		count = 4,
 		requestVersion = dataLoadVersion,
@@ -639,6 +694,7 @@
 		const requestCharacterId = characterId;
 		const requestItemId = deepLinkItemId;
 		const requestRandomFeed = randomFeedRequested;
+		const requestChronologicalFeed = chronologicalFeedRequested;
 		const requestVersion = ++dataLoadVersion;
 
 		loading = true;
@@ -649,12 +705,44 @@
 		pageNum = 1;
 		hasMore = true;
 		randomFeedActive = requestRandomFeed;
+		chronologicalFeedActive = requestChronologicalFeed;
 		currentIndex = 0;
 		feedSequence = 0;
 		loadLikedIds();
 		loadAudioPreference();
 
 		try {
+			if (requestChronologicalFeed) {
+				await loadChronologicalPage(requestVersion);
+				if (requestVersion !== dataLoadVersion) return;
+				if (settlements.length === 0) {
+					error = "재생할 결산이 없습니다.";
+					return;
+				}
+
+				let targetIndex = requestItemId
+					? settlements.findIndex((item) => item.id === requestItemId)
+					: 0;
+				while (targetIndex < 0 && hasMore) {
+					const loadedAny = await loadChronologicalPage(requestVersion);
+					if (requestVersion !== dataLoadVersion) return;
+					if (!loadedAny) break;
+					targetIndex = settlements.findIndex(
+						(item) => item.id === requestItemId,
+					);
+				}
+
+				const initialIndex = Math.max(targetIndex, 0);
+				character = getCharacterForItem(settlements[initialIndex]);
+				loading = false;
+				if (initialIndex > 0) {
+					currentIndex = initialIndex;
+					await tick();
+					scrollToIndex(initialIndex);
+				}
+				return;
+			}
+
 			if (requestRandomFeed) {
 				const initialItem = requestItemId
 					? await getSettlementById(requestItemId)
@@ -735,7 +823,7 @@
 	}
 
 	$effect(() => {
-		const requestKey = `${characterId}:${deepLinkItemId ?? ""}:${randomFeedRequested}`;
+		const requestKey = `${characterId}:${deepLinkItemId ?? ""}:${randomFeedRequested}:${chronologicalFeedRequested}`;
 		if (!characterId || loadedRequestKey === requestKey) return;
 		loadedRequestKey = requestKey;
 		void loadData();
@@ -891,6 +979,18 @@
 			return;
 		}
 
+		if (chronologicalFeedActive) {
+			if (hasMore) {
+				void loadChronologicalPage();
+				return;
+			}
+
+			chronologicalFeedActive = false;
+			randomFeedActive = true;
+			void loadRandomItems();
+			return;
+		}
+
 		if (hasMore) {
 			void loadMore();
 			return;
@@ -903,10 +1003,13 @@
 	async function scrollToNext() {
 		const requestedIndex = currentIndex + 1;
 		if (requestedIndex >= settlements.length && !loadingMore) {
-			if (!randomFeedActive && hasMore) {
+			if (chronologicalFeedActive && hasMore) {
+				await loadChronologicalPage();
+			} else if (!randomFeedActive && hasMore) {
 				await loadMore();
 			}
 			if (requestedIndex >= settlements.length) {
+				chronologicalFeedActive = false;
 				randomFeedActive = true;
 				await loadRandomItems(1);
 			}

@@ -1,12 +1,12 @@
 <script lang="ts">
-	import type { TalkComment } from "$lib/types";
+	import type { SettlementComment } from "$lib/types";
 	import { authStore } from "$lib/stores/auth";
 	import { deleteComment } from "$lib/api";
 	import ConfirmPopup from "$lib/components/ConfirmPopup.svelte";
 	import { toast } from "$lib/stores/toast";
 
 	interface Props {
-		comment: TalkComment;
+		comment: SettlementComment;
 		onDelete?: (id: string) => void;
 	}
 
@@ -41,13 +41,13 @@
 </script>
 
 <div
-	class="flex flex-col gap-2 px-6 pt-4 bg-white transition-opacity {isDeleting
+	class="flex flex-col gap-2 px-6 pt-4 bg-yt-bg transition-opacity {isDeleting
 		? 'opacity-50'
 		: ''}"
 >
 	<div class="flex justify-between items-center">
 		<div class="flex items-center gap-2">
-			<span class="text-xs font-bold text-text-primary"
+			<span class="text-xs font-bold text-yt-text"
 				>{comment.author}</span
 			>
 		</div>
@@ -55,16 +55,16 @@
 			<button
 				onclick={handleDeleteClick}
 				disabled={isDeleting}
-				class="text-xs font-light text-text-muted transition-colors hover:text-red-500 hover:underline disabled:opacity-50"
-				aria-label="톡 삭제"
+				class="text-xs font-light text-yt-text-muted transition-colors hover:text-yt-accent hover:underline disabled:opacity-50"
+				aria-label="댓글 삭제"
 			>
 				삭제
 			</button>
 		{/if}
 	</div>
-	<div class="pb-4 border-b border-border flex flex-col gap-1">
-		<p class="text-sm font-medium text-text-primary">{comment.content}</p>
-		<span class="text-xs font-light text-text-muted text-left"
+	<div class="pb-4 border-b border-yt-border flex flex-col gap-1">
+		<p class="text-sm font-medium text-yt-text">{comment.content}</p>
+		<span class="text-xs font-light text-yt-text-muted text-left"
 			>{comment.createdAt}</span
 		>
 	</div>
@@ -72,7 +72,7 @@
 
 {#if showDeletePopup}
 	<ConfirmPopup
-		title="톡을 삭제하시겠습니까?"
+		title="댓글을 삭제하시겠습니까?"
 		cancelText="뒤로가기"
 		confirmText="삭제하기"
 		onConfirm={handleConfirmDelete}

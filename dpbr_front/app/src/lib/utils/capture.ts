@@ -1,4 +1,44 @@
-import html2canvas from 'html2canvas';
+import { toBlob } from 'html-to-image';
+
+export interface CaptureImageOptions {
+	backgroundColor?: string;
+	height?: number;
+	scale?: number;
+	width?: number;
+}
+
+export async function captureElementAsPngBlob(
+	element: HTMLElement,
+	options: CaptureImageOptions = {}
+): Promise<Blob> {
+	const rect = element.getBoundingClientRect();
+	const width = options.width ?? Math.round(rect.width);
+	const height = options.height ?? Math.round(rect.height);
+	const blob = await toBlob(element, {
+		backgroundColor: options.backgroundColor ?? '#000000',
+		width,
+		height,
+		pixelRatio: options.scale ?? 2,
+		cacheBust: true
+	});
+
+	if (!blob) {
+		throw new Error('Failed to create image blob');
+	}
+
+	return blob;
+}
+
+export function downloadBlob(blob: Blob, filename: string): void {
+	const url = URL.createObjectURL(blob);
+	const link = document.createElement('a');
+	link.href = url;
+	link.download = filename;
+	document.body.appendChild(link);
+	link.click();
+	link.remove();
+	window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
 
 /**
  * HTML 요소를 이미지로 캡쳐하고 다운로드합니다.
@@ -18,36 +58,10 @@ export async function captureElementAsImage(
 	filename: string
 ): Promise<void> {
 	try {
-		const canvas = await html2canvas(element, {
-			scale: 2, // 고해상도 (Retina 디스플레이 대응)
-			useCORS: true, // 외부 이미지 허용
-			allowTaint: false, // 보안 설정
-			backgroundColor: '#f5f5f5', // 배경색
-			scrollY: -window.scrollY, // 스크롤 위치 보정
-			scrollX: -window.scrollX,
-			windowWidth: element.scrollWidth,
-			windowHeight: element.scrollHeight
+		const blob = await captureElementAsPngBlob(element, {
+			backgroundColor: '#f5f5f5'
 		});
-
-		// Canvas를 Blob으로 변환 후 다운로드
-		return new Promise((resolve, reject) => {
-			canvas.toBlob((blob) => {
-				if (!blob) {
-					reject(new Error('Failed to create image blob'));
-					return;
-				}
-
-				const url = URL.createObjectURL(blob);
-				const a = document.createElement('a');
-				a.href = url;
-				a.download = filename;
-				document.body.appendChild(a);
-				a.click();
-				document.body.removeChild(a);
-				URL.revokeObjectURL(url);
-				resolve();
-			}, 'image/png');
-		});
+		downloadBlob(blob, filename);
 	} catch (error) {
 		console.error('Image capture failed:', error);
 		throw error;

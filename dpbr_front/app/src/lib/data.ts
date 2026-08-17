@@ -1,4 +1,4 @@
-import type { Character, SettlementItem, TalkComment } from './types';
+import type { Character, SettlementItem } from './types';
 
 export const characters: Character[] = [
 	{
@@ -227,74 +227,6 @@ export const settlementItems: SettlementItem[] = [
 		description: 'GAME 월드를 누비며 몬스터 컬렉션 1000마리를 등록했습니다. 탐험의 증표!',
 		imageUrl: 'https://placehold.co/400x300/FFECB3/FFA000?text=MONSTER+COL',
 		acquiredAt: '2026-03-22'
-	}
-];
-
-export const talkComments: TalkComment[] = [
-	{
-		id: 'talk-1',
-		userId: 101,
-		author: '단풍사랑',
-		authorAvatar: 'https://placehold.co/40x40/FFE0B2/ff8e42?text=DS',
-		content: '안녕하세요! COMMUNITY_PROJECT COHORT ACTIVITY_RECAP 축하합니다!',
-		createdAt: '26. 01. 22. 23:11'
-	},
-	{
-		id: 'talk-2',
-		userId: 102,
-		author: 'GAME러버',
-		authorAvatar: 'https://placehold.co/40x40/E8F5E9/4CAF50?text=ML',
-		content: '모두 수고하셨습니다~ 다음 기수도 화이팅!',
-		createdAt: '26. 01. 22. 22:45'
-	},
-	{
-		id: 'talk-3',
-		userId: 103,
-		author: '바람의나라',
-		authorAvatar: 'https://placehold.co/40x40/E3F2FD/2196F3?text=BN',
-		content: 'ACTIVITY_RECAP 정말 잘 만들었네요. 디자인이 너무 예뻐요!',
-		createdAt: '26. 01. 22. 21:30'
-	},
-	{
-		id: 'talk-4',
-		userId: 104,
-		author: '길드장최고',
-		authorAvatar: 'https://placehold.co/40x40/F3E5F5/9C27B0?text=GJ',
-		content:
-			'우리 길드원들 최고! 다 같이 힘내서 이번 시즌도 잘 마무리합시다. 앞으로도 함께 즐거운 GAME 생활 해요~',
-		createdAt: '26. 01. 21. 18:20'
-	},
-	{
-		id: 'talk-5',
-		userId: 105,
-		author: '초보모험가',
-		authorAvatar: 'https://placehold.co/40x40/FFF9C4/FFC107?text=CB',
-		content: '저도 다음에 ACTIVITY_RECAP 받고 싶어요!',
-		createdAt: '26. 01. 21. 15:05'
-	},
-	{
-		id: 'talk-6',
-		userId: 106,
-		author: '어둠의기사',
-		authorAvatar: 'https://placehold.co/40x40/FFCCBC/FF5722?text=DK',
-		content: '멋진 결산이네요 ㅎㅎ',
-		createdAt: '26. 01. 20. 09:33'
-	},
-	{
-		id: 'talk-7',
-		userId: 107,
-		author: '별빛수호자',
-		authorAvatar: 'https://placehold.co/40x40/FCE4EC/E91E63?text=BS',
-		content: '와 진짜 대단하다... 부럽!',
-		createdAt: '26. 01. 19. 20:12'
-	},
-	{
-		id: 'talk-8',
-		userId: 108,
-		author: '나무늘보',
-		authorAvatar: 'https://placehold.co/40x40/E0F2F1/009688?text=NB',
-		content: '다음 기수에는 저도 꼭 참여할게요!',
-		createdAt: '26. 01. 19. 14:40'
 	}
 ];
 

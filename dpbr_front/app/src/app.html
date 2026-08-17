@@ -1,26 +1,39 @@
 <!doctype html>
-<html lang="ko" style="color-scheme: light;">
+<html lang="ko">
 
 <head>
 	<meta charset="utf-8" />
-	<link rel="icon" href="%sveltekit.assets%/images/icons/APP_Favicon.ico" />
+	<script>
+		// FOUC 방지: CSS 로드 전에 저장된 테마를 즉시 적용
+		(function () {
+			try {
+				var stored = localStorage.getItem('theme');
+				var dark =
+					stored === 'dark' ||
+					((!stored || stored === 'system') &&
+						window.matchMedia('(prefers-color-scheme: dark)').matches);
+				document.documentElement.classList.toggle('dark', dark);
+			} catch (e) { }
+		})();
+	</script>
+	<link rel="icon" type="image/x-icon" href="%sveltekit.assets%/images/icons/app_favicon.ico?v=14" />
 	<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
 	<link rel="stylesheet" as="style" crossorigin
 		href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" />
 	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
-	<title>COMMUNITY_PROJECT</title>
+	<title>단풍바람 14기</title>
 
 	<!-- SEO & Metadata -->
-	<meta name="description" content="COMMUNITY_PROJECT COHORT ACTIVITY_RECAP - 당신의 GAME 여정을 기록하세요." />
+	<meta name="description" content="단풍바람 14기 메생결산 - 우리의 GAME 여정을 기록합니다." />
 	<meta property="og:type" content="website" />
-	<meta property="og:title" content="COMMUNITY_PROJECT" />
-	<meta property="og:description" content="COMMUNITY_PROJECT COHORT ACTIVITY_RECAP - 당신의 GAME 여정을 기록하세요." />
+	<meta property="og:title" content="단풍바람 14기 메생결산" />
+	<meta property="og:description" content="단풍바람 14기 메생결산 - 우리의 GAME 여정을 기록합니다." />
 	<meta property="og:image" content="%sveltekit.assets%/images/thumbnail.png" />
-	<meta property="og:url" content="https://github.com/GC-MapleWind/MSGS_14_F" />
+	<meta property="og:url" content="https://gc-community_project.github.io/FRONTEND_APP/" />
 
 	<meta name="twitter:card" content="summary_large_image" />
-	<meta name="twitter:title" content="COMMUNITY_PROJECT" />
-	<meta name="twitter:description" content="COMMUNITY_PROJECT COHORT ACTIVITY_RECAP - 당신의 GAME 여정을 기록하세요." />
+	<meta name="twitter:title" content="단풍바람 14기 메생결산" />
+	<meta name="twitter:description" content="단풍바람 14기 메생결산 - 우리의 GAME 여정을 기록합니다." />
 	<meta name="twitter:image" content="%sveltekit.assets%/images/thumbnail.png" />
 
 	%sveltekit.head%

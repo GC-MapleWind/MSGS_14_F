@@ -57,14 +57,14 @@
 		</div>
 	{:else if teamMessage}
 		<div class="flex-1 flex flex-col bg-yt-bg overflow-y-auto">
-			<div class="flex justify-center items-center bg-yt-bg px-6 py-4">
+			<div class="flex justify-center items-center bg-yt-bg px-6 py-4 sm:py-6">
 				<img
 					src={teamMessage.imageUrl || DEFAULT_AVATAR_URL}
 					alt={teamMessage.name}
 					onerror={handleImageError}
 					class={teamMessage.imageUrl
-						? "w-full h-auto object-contain rounded-lg"
-						: "w-1/2 h-auto object-contain rounded-lg"}
+						? "w-full h-auto max-w-[20rem] max-h-[38dvh] object-contain rounded-lg"
+						: "w-1/2 h-auto max-w-48 max-h-[30dvh] object-contain rounded-lg"}
 				/>
 			</div>
 

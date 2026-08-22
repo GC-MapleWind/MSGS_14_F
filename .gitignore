@@ -13,6 +13,7 @@ dist/
 .env.*
 !.env.example
 !dpbr_front/app/.env.example
+!dpbr_front/app/.env.production
 
 # Logs
 logs

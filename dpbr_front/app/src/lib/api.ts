@@ -1,5 +1,6 @@
 import { env } from '$env/dynamic/public';
-import type { Character, SettlementItem, TalkComment, TeamMessageItem } from './types';
+import type { Character, SettlementComment, SettlementItem, TeamMessageItem } from './types';
+import { DEFAULT_AVATAR_URL } from './utils/image';
 
 /**
  * API 기본 URL
@@ -32,10 +33,20 @@ function buildApiUrl(endpoint: string): string {
 }
 
 function normalizeAssetUrl(url: string | null | undefined): string {
-	if (!url) return '/default-avatar.png';
+	return normalizeOptionalAssetUrl(url) ?? DEFAULT_AVATAR_URL;
+}
+
+function normalizeOptionalAssetUrl(url: string | null | undefined): string | null {
+	if (!url) return null;
 	if (/^https?:\/\//i.test(url)) return url;
-	if (url.startsWith('/')) return `${getApiBaseUrl()}${url}`;
-	return `${getApiBaseUrl()}/${url}`;
+
+	const normalizedPath = url.startsWith('/') ? url : `/${url}`;
+	const apiBaseUrl = getApiBaseUrl();
+	if (/^https?:\/\//i.test(apiBaseUrl)) {
+		return `${new URL(apiBaseUrl).origin}${normalizedPath}`;
+	}
+
+	return normalizedPath;
 }
 
 function normalizeApiErrorDetail(detail: unknown): string {
@@ -107,11 +118,14 @@ function getAccessToken(): string | null {
 interface CharacterResponse {
 	id: number;
 	name: string;
+	owner_name: string;
 	detail_txt: string | null;
 	level: number;
+	settlement_count: number;
 	job: string;
 	server: string;
 	avatar_url: string | null;
+	preview_image_url: string | null;
 }
 
 interface SettlementResponse {
@@ -120,6 +134,10 @@ interface SettlementResponse {
 	title: string;
 	description: string | null;
 	img_url: string | null;
+	audio_url?: string | null;
+	audio_start_seconds?: number;
+	audio_duration_seconds?: number | null;
+	audio_fade_out_seconds?: number | null;
 	acquired_at: string;
 }
 
@@ -140,6 +158,7 @@ interface SettlementsPaginationResponse {
 interface CommentResponse {
 	id: number;
 	user_id: number | null;
+	settlement_id: number | null;
 	author: string;
 	content: string;
 	created_at: string;
@@ -148,6 +167,7 @@ interface CommentResponse {
 interface TeamMemberResponse {
 	id: number;
 	name: string;
+	nickname: string;
 	role: string;
 	profile_img_url: string | null;
 	message: {
@@ -165,6 +185,16 @@ interface TeamMemberDetailResponse extends TeamMemberResponse {
 	} | null;
 }
 
+class ApiError extends Error {
+	constructor(
+		readonly status: number,
+		message: string
+	) {
+		super(message);
+		this.name = 'ApiError';
+	}
+}
+
 /**
  * API 호출 유틸리티
  */
@@ -173,6 +203,7 @@ async function apiCall<T>(endpoint: string, options?: RequestInit): Promise<T> {
 
 	try {
 		const response = await fetch(url, {
+			cache: 'no-store',
 			...options,
 			headers: {
 				'Content-Type': 'application/json',
@@ -196,7 +227,8 @@ async function apiCall<T>(endpoint: string, options?: RequestInit): Promise<T> {
 				}
 			}
 
-			throw new Error(
+			throw new ApiError(
+				response.status,
 				exposeDetail && detail
 					? `API Error: ${response.status} ${detail}`
 					: `API Error: ${response.status} ${response.statusText}`
@@ -230,10 +262,20 @@ export async function getCharacters(): Promise<Character[]> {
 
 export async function getCharactersPaginated(
 	page: number = 1,
-	limit: number = 10
+	limit: number = 10,
+	query: string = ''
 ): Promise<{ items: Character[]; total: number; page: number; limit: number }> {
+	const params = new URLSearchParams({
+		page: page.toString(),
+		limit: limit.toString()
+	});
+	const normalizedQuery = query.trim();
+	if (normalizedQuery) {
+		params.set('q', normalizedQuery);
+	}
+
 	const data = await apiCall<CharactersPaginationResponse>(
-		`/characters/pagination?page=${page}&limit=${limit}`
+		`/characters/pagination?${params.toString()}`
 	);
 
 	return {
@@ -247,10 +289,12 @@ export async function getCharactersPaginated(
 function mapCharacterResponse(char: CharacterResponse): Character {
 	return {
 		id: char.id.toString(),
-		name: char.name,
+		name: char.owner_name || char.name,
 		nickname: char.detail_txt || char.name,
 		avatarUrl: normalizeAssetUrl(char.avatar_url),
+		previewImageUrl: normalizeOptionalAssetUrl(char.preview_image_url),
 		level: char.level,
+		settlementCount: char.settlement_count ?? 0,
 		job: char.job,
 		club: 'COMMUNITY_PROJECT',
 		server: char.server
@@ -263,7 +307,11 @@ function mapSettlementResponse(settlement: SettlementResponse): SettlementItem {
 		characterId: settlement.character_id.toString(),
 		title: settlement.title,
 		description: settlement.description || '',
-		imageUrl: settlement.img_url ? `${getApiBaseUrl()}${settlement.img_url}` : '/default-avatar.png',
+		imageUrl: normalizeAssetUrl(settlement.img_url),
+		audioUrl: normalizeOptionalAssetUrl(settlement.audio_url),
+		audioStartSeconds: settlement.audio_start_seconds ?? 0,
+		audioDurationSeconds: settlement.audio_duration_seconds ?? null,
+		audioFadeOutSeconds: settlement.audio_fade_out_seconds ?? null,
 		acquiredAt: settlement.acquired_at
 	};
 }
@@ -277,22 +325,23 @@ export async function getCharacterById(id: string): Promise<Character | null> {
 
 		return {
 			id: data.id.toString(),
-			name: data.name,
+			name: data.owner_name || data.name,
 			nickname: data.detail_txt || data.name,
 			avatarUrl: normalizeAssetUrl(data.avatar_url),
 			level: data.level,
+			settlementCount: data.settlement_count ?? 0,
 			job: data.job,
 			club: 'COMMUNITY_PROJECT',
 			server: data.server
 		};
 	} catch (error) {
-		console.error('Failed to fetch character:', error);
-		return null;
+		if (error instanceof ApiError && error.status === 404) return null;
+		throw error;
 	}
 }
 
 /**
- * 특정 캐릭터의 ACTIVITY_RECAP 목록 조회
+ * 특정 캐릭터의 결산 목록 조회
  */
 export async function getSettlementsByCharacterId(characterId: string): Promise<SettlementItem[]> {
 	const data = await apiCall<SettlementResponse[]>(
@@ -300,6 +349,22 @@ export async function getSettlementsByCharacterId(characterId: string): Promise<
 	);
 
 	return data.map(mapSettlementResponse);
+}
+
+export async function getSettlementsPaginated(
+	page: number = 1,
+	limit: number = 10
+): Promise<{ items: SettlementItem[]; total: number; page: number; limit: number }> {
+	const data = await apiCall<SettlementsPaginationResponse>(
+		`/settlements/pagination?page=${page}&limit=${limit}`
+	);
+
+	return {
+		items: data.items.map(mapSettlementResponse),
+		total: data.total,
+		page: data.page,
+		limit: data.limit
+	};
 }
 
 export async function getSettlementsByCharacterIdPaginated(
@@ -320,54 +385,68 @@ export async function getSettlementsByCharacterIdPaginated(
 }
 
 /**
- * 특정 ACTIVITY_RECAP 상세 정보 조회
+ * 특정 결산 상세 정보 조회
  */
 export async function getSettlementById(id: string): Promise<SettlementItem | null> {
 	try {
 		const data = await apiCall<SettlementResponse>(`/settlements/${id}`);
 
-		return {
-			id: data.id.toString(),
-			characterId: data.character_id.toString(),
-			title: data.title,
-			description: data.description || '',
-			imageUrl: data.img_url ? `${getApiBaseUrl()}${data.img_url}` : '/default-avatar.png',
-			acquiredAt: data.acquired_at
-		};
+		return mapSettlementResponse(data);
 	} catch (error) {
-		console.error('Failed to fetch settlement:', error);
-		return null;
+		if (error instanceof ApiError && error.status === 404) return null;
+		throw error;
 	}
 }
 
 /**
- * 댓글 목록 조회
+ * 전체 결산 중 하나를 무작위로 조회
  */
-export async function getComments(page: number = 1, limit: number = 20): Promise<TalkComment[]> {
+export async function getRandomSettlement(): Promise<SettlementItem | null> {
+	try {
+		const data = await apiCall<SettlementResponse>('/settlements/random');
+		return mapSettlementResponse(data);
+	} catch (error) {
+		if (error instanceof ApiError && error.status === 404) return null;
+		throw error;
+	}
+}
+
+/**
+ * 특정 결산의 댓글 목록 조회
+ */
+export async function getSettlementComments(
+	settlementId: string,
+	page: number = 1,
+	limit: number = 20
+): Promise<SettlementComment[]> {
 	const data = await apiCall<CommentResponse[]>(
-		`/comments?page=${page}&limit=${limit}`
+		`/settlements/${settlementId}/comments?page=${page}&limit=${limit}`
 	);
 
 	return data.map((comment) => ({
 		id: comment.id.toString(),
+		settlementId: (comment.settlement_id ?? settlementId).toString(),
 		userId: comment.user_id,
 		author: comment.author,
-		authorAvatar: '/default-avatar.png',
+		authorAvatar: DEFAULT_AVATAR_URL,
 		content: comment.content,
 		createdAt: formatCommentDateTime(comment.created_at)
 	}));
 }
 
 /**
- * 댓글 작성
+ * 특정 결산에 댓글 작성
  */
-export async function createComment(content: string): Promise<CommentResponse> {
+export async function createSettlementComment(
+	settlementId: string,
+	content: string
+): Promise<CommentResponse> {
 	const accessToken = getAccessToken();
 	if (!accessToken) {
 		throw new Error('로그인이 필요합니다.');
 	}
 
-	return await apiCall<CommentResponse>('/comments', {
+	return await apiCall<CommentResponse>(`/settlements/${settlementId}/comments`, {
 		method: 'POST',
 		headers: {
 			Authorization: `Bearer ${accessToken}`
@@ -377,7 +456,7 @@ export async function createComment(content: string): Promise<CommentResponse> {
 }
 
 /**
- * 댓글 삭제 (스켈레톤 함수 - 프론트엔드 작업용)
+ * 내 댓글 삭제
  */
 export async function deleteComment(id: string): Promise<void> {
 	const accessToken = getAccessToken();
@@ -399,6 +478,7 @@ export async function getTeamMembers(): Promise<TeamMessageItem[]> {
 	return data.map((member) => ({
 		id: member.id.toString(),
 		name: member.name,
+		nickname: member.nickname || member.name,
 		role: member.role,
 		title: member.message?.title || '',
 		content: member.message?.content || '',
@@ -413,14 +493,15 @@ export async function getTeamMessageDetail(memberId: string): Promise<TeamMessag
 		return {
 			id: data.id.toString(),
 			name: data.name,
+			nickname: data.nickname || data.name,
 			role: data.role,
 			title: data.message?.title || '',
 			content: data.message?.content || '',
 			imageUrl: normalizeAssetUrl(data.message?.detail_img_url || data.profile_img_url)
 		};
 	} catch (error) {
-		console.error('Failed to fetch team message detail:', error);
-		return null;
+		if (error instanceof ApiError && error.status === 404) return null;
+		throw error;
 	}
 }
 
@@ -428,12 +509,7 @@ export async function getTeamMessageDetail(memberId: string): Promise<TeamMessag
  * 사이드바용: 운영팀 캐릭터 ID 조회
  */
 export async function getAdminCharacter(): Promise<{ id: number | null; name?: string }> {
-	try {
-		return await apiCall<{ id: number | null; name?: string }>('/system/admin-character');
-	} catch (error) {
-		console.error('Failed to fetch admin character:', error);
-		return { id: null };
-	}
+	return apiCall<{ id: number | null; name?: string }>('/system/admin-character');
 }
 
 /**

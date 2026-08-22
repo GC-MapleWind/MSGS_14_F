@@ -3,7 +3,9 @@ export interface Character {
 	name: string;
 	nickname: string;
 	avatarUrl: string;
+	previewImageUrl?: string | null;
 	level: number;
+	settlementCount?: number;
 	job: string;
 	club: string;
 	server: string;
@@ -15,20 +17,26 @@ export interface SettlementItem {
 	title: string;
 	description: string;
 	imageUrl: string;
+	audioUrl?: string | null;
+	audioStartSeconds?: number;
+	audioDurationSeconds?: number | null;
+	audioFadeOutSeconds?: number | null;
 	acquiredAt: string;
 }
 
 export interface TeamMessageItem {
 	id: string;
 	name: string;
+	nickname: string;
 	role: string;
 	title: string;
 	content: string;
 	imageUrl: string;
 }
 
-export interface TalkComment {
+export interface SettlementComment {
 	id: string;
+	settlementId: string;
 	userId: number | null;
 	author: string;
 	authorAvatar: string;

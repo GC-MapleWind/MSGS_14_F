@@ -127,18 +127,18 @@
 </script>
 
 <svelte:head>
-	<title>로그인 - COMMUNITY_PROJECT</title>
+	<title>로그인 - 단풍바람 14기</title>
 </svelte:head>
 
-<div class="min-h-screen bg-transparent flex flex-col px-4 py-8">
+<div class="min-h-screen bg-yt-bg flex flex-col px-4 py-8">
 	<!-- 메인 컨텐츠 -->
 	<div class="flex-1 flex items-center justify-center">
 		<div class="w-full max-w-md flex flex-col items-center gap-12">
 			<!-- 앱 타이틀 이미지 로고 -->
 			<img
-				src="/images/logos/logo-text-white.svg"
+				src="/images/logos/logo-text-mono.svg"
 				alt="COMMUNITY_PROJECT"
-				class="h-10 object-contain drop-shadow-sm mb-4"
+				class="h-10 object-contain mb-4 dark:invert"
 				draggable="false"
 			/>
 
@@ -158,7 +158,7 @@
 						onFocus={handleNameFocus}
 						onBlur={handleNameBlur}
 						onKeyDown={handleNameKeyDown}
-						class="rounded-t-lg rounded-b-none bg-white/20 border-b border-white/30 backdrop-blur-sm text-white placeholder-white"
+						class="rounded-t-lg rounded-b-none border-b !border-b-yt-border"
 					/>
 
 					<!-- 학번 입력 -->
@@ -177,7 +177,7 @@
 							onBlur={handleStudentIdBlur}
 							onClear={handleStudentIdClear}
 							onKeyDown={handleStudentIdKeyDown}
-							class="rounded-b-lg rounded-t-none bg-white/20 backdrop-blur-sm text-white placeholder-white"
+							class="rounded-b-lg rounded-t-none"
 						/>
 					</div>
 				</div>
@@ -196,12 +196,12 @@
 						</div>
 					{/if}
 					<Button
-						label="ACTIVITY_RECAP 입장"
+						label="로그인"
 						variant="primary"
 						buttonState={isLoading ? "disabled" : "default"}
 						onClick={handleLogin}
 						type="button"
-						class="bg-white text-primary-dark hover:bg-white/90 font-medium w-full"
+						class="rounded-full font-medium w-full"
 					/>
 				</div>
 
@@ -210,11 +210,11 @@
 					<input
 						type="checkbox"
 						bind:checked={saveName}
-						class="w-5 h-5 rounded-full border-2 border-white appearance-none checked:bg-white checked:border-white relative
-						checked:after:content-['✓'] checked:after:text-primary checked:after:absolute checked:after:inset-0 checked:after:flex checked:after:items-center checked:after:justify-center checked:after:text-sm"
+						class="w-5 h-5 rounded-full border-2 border-yt-text-muted appearance-none checked:bg-yt-chip-active checked:border-yt-chip-active relative
+						checked:after:content-['✓'] checked:after:text-yt-chip-active-text checked:after:absolute checked:after:inset-0 checked:after:flex checked:after:items-center checked:after:justify-center checked:after:text-sm"
 						aria-label="이름 저장"
 					/>
-					<span class="text-white text-sm">이름 저장</span>
+					<span class="text-yt-text text-sm">이름 저장</span>
 				</label>
 
 				<!-- 카카오 로그인 버튼 주석 처리
@@ -234,8 +234,8 @@
 
 	<!-- 푸터 -->
 	<div class="mt-8 flex justify-center">
-		<p class="text-white/80 text-sm font-light text-center">
-			COMMUNITY_PROJECT 회원이 이용 가능한 서비스입니다.
+		<p class="text-yt-text-muted text-sm font-light text-center">
+			단풍바람 14기 회원이 이용 가능한 서비스입니다.
 		</p>
 	</div>
 </div>

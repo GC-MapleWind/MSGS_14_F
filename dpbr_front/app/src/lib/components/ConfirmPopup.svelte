@@ -46,13 +46,13 @@
 	tabindex="-1"
 >
     <div
-        class="w-[272px] bg-white rounded-2xl flex flex-col items-center"
+        class="w-[272px] bg-yt-bg border border-yt-border rounded-2xl flex flex-col items-center"
         onclick={handleContainerClick}
     >
         <!-- 타이틀 영역 -->
         <div class="px-6 pt-8 pb-6 w-full text-center">
             <p
-                class="text-[#292e33] font-medium"
+                class="text-yt-text font-medium"
                 style="font-size: 16px; line-height: 1.5;"
             >
                 {title}
@@ -63,14 +63,14 @@
         <div class="flex w-full px-4 pb-4 gap-2">
             <button
                 onclick={onCancel}
-                class="flex-1 py-[10px] rounded-lg bg-[#edf1f5] text-[#525c66] font-medium transition-opacity active:opacity-80"
+                class="flex-1 py-[10px] rounded-lg bg-yt-chip text-yt-text font-medium transition-opacity active:opacity-80"
                 style="font-size: 14px; line-height: 1.5;"
             >
                 {cancelText}
             </button>
             <button
                 onclick={onConfirm}
-                class="flex-1 py-[10px] rounded-lg bg-[#f87c56] text-white font-medium transition-opacity active:opacity-80"
+                class="flex-1 py-[10px] rounded-lg bg-yt-accent text-white font-medium transition-opacity active:opacity-80"
                 style="font-size: 14px; line-height: 1.5;"
             >
                 {confirmText}

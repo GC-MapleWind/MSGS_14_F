@@ -26,7 +26,8 @@ const homePreviewSettlement = settlements[Math.floor(Math.random() * settlements
 const teamMessage = {
 	id: "1",
 	name: "강민",
-	role: "인사팀장",
+	nickname: "마가다락방",
+	role: "비상대책위원장",
 	title: "단풍바람 14기를 함께하며",
 	content: "단풍바람 14기를 여러분과 함께해서 행복했습니다. 모두 화이팅!"
 };
@@ -205,7 +206,7 @@ function mobileHeader({ title = "", back = "", close = "", main = false } = {}) 
 					<a class="brand-link" href="${routeUrl("/")}" data-route="/" aria-label="단풍바람 14기 홈">${brandMark()}</a>
 					<div class="mobile-header__actions">
 						<button class="icon-button" type="button" data-open-search aria-label="검색 열기">${icons.search}</button>
-						<a class="icon-button" href="${routeUrl("/member/admin-team")}" data-route="/member/admin-team" aria-label="운영팀 한마디">${icons.megaphone}</a>
+						<a class="icon-button" href="${routeUrl("/member/admin-team")}" data-route="/member/admin-team" aria-label="운영진 한마디">${icons.megaphone}</a>
 					</div>
 				</div>
 			</header>
@@ -229,7 +230,7 @@ function guide() {
 		<aside class="guide" aria-label="주요 메뉴">
 			<nav class="guide__nav">
 				<a class="guide-row ${active("/") ? "is-active" : ""}" href="${routeUrl("/")}" data-route="/">${icons.home}<span>홈</span></a>
-				<a class="guide-row ${active("/member/admin-team") || active("/team-message") ? "is-active" : ""}" href="${routeUrl("/member/admin-team")}" data-route="/member/admin-team">${icons.megaphone}<span>운영팀 한마디</span></a>
+				<a class="guide-row ${active("/member/admin-team") || active("/team-message") ? "is-active" : ""}" href="${routeUrl("/member/admin-team")}" data-route="/member/admin-team">${icons.megaphone}<span>운영진 한마디</span></a>
 				<a class="guide-row ${active("/talk") ? "is-active" : ""}" href="${routeUrl("/talk")}" data-route="/talk">${icons.message}<span>톡</span></a>
 				<a class="guide-row" href="${routeUrl(user ? "/member/1" : "/login")}" data-route="${user ? "/member/1" : "/login"}">${icons.user}<span>내 페이지</span></a>
 			</nav>
@@ -257,7 +258,7 @@ function bottomNav() {
 	return `
 		<nav class="bottom-nav" aria-label="모바일 메뉴">
 			<a class="${path === "/" ? "is-active" : ""}" href="${routeUrl("/")}" data-route="/">${icons.home}<span>홈</span></a>
-			<a class="${path.startsWith("/member/admin-team") ? "is-active" : ""}" href="${routeUrl("/member/admin-team")}" data-route="/member/admin-team">${icons.megaphone}<span>운영팀</span></a>
+			<a class="${path.startsWith("/member/admin-team") ? "is-active" : ""}" href="${routeUrl("/member/admin-team")}" data-route="/member/admin-team">${icons.megaphone}<span>운영진</span></a>
 			<a class="${path.startsWith("/talk") ? "is-active" : ""}" href="${routeUrl("/talk")}" data-route="/talk">${icons.message}<span>톡</span></a>
 			<a class="${path.startsWith("/member/1") ? "is-active" : ""}" href="${routeUrl(isLoggedIn() ? "/member/1" : "/login")}" data-route="${isLoggedIn() ? "/member/1" : "/login"}">${icons.user}<span>내 페이지</span></a>
 		</nav>
@@ -489,7 +490,7 @@ function renderMember() {
 }
 
 function renderAdminTeam() {
-	document.title = "운영팀 한마디 - 단풍바람 14기";
+	document.title = "운영진 한마디 - 단풍바람 14기";
 	app.innerHTML = shell(`
 		<section class="channel-view">
 			${channelToolbar()}
@@ -497,13 +498,13 @@ function renderAdminTeam() {
 				<div class="channel-banner channel-banner--team"></div>
 				<div class="channel-header">
 					<div class="profile-avatar profile-avatar--team">${icons.megaphone}</div>
-					<div class="channel-copy"><strong>단풍바람 14기 운영팀</strong><span>@운영팀</span><small>14기 · 가천대학교 · 운영팀</small><small>한마디 1개</small></div>
+					<div class="channel-copy"><strong>단풍바람 14기 비대위</strong><span>@비대위</span><small>14기 · 가천대학교 · 비대위</small><small>한마디 1개</small></div>
 				</div>
 				<div class="channel-tabs"><span>홈</span><strong>한마디</strong></div>
 				<div class="team-feed">
 					<a class="team-row" href="${routeUrl("/team-message/1")}" data-route="/team-message/1">
 						<div class="team-row__image">${icons.megaphone}</div>
-						<div><strong>${teamMessage.title}</strong><span>${teamMessage.name} ${teamMessage.role}</span></div>
+						<div><strong>${teamMessage.title}</strong><span>@${teamMessage.nickname} · ${teamMessage.role}</span></div>
 					</a>
 				</div>
 			</div>
@@ -513,14 +514,15 @@ function renderAdminTeam() {
 }
 
 function renderTeamMessage() {
-	document.title = `${teamMessage.name} - 운영팀 한마디`;
+	document.title = `${teamMessage.name} - 운영진 한마디`;
 	app.innerHTML = shell(`
 		<section class="detail-view">
 			<header class="detail-toolbar"><a class="icon-button" href="${routeUrl("/member/admin-team")}" data-route="/member/admin-team" aria-label="닫기">${icons.close}</a></header>
 			<article class="detail-page scroll-page">
 				<div class="detail-image"><img src="${assets.avatar}" alt="강민" /></div>
 				<dl class="detail-fields">
-					<div><dt>직책</dt><dd>${teamMessage.role}</dd></div>
+					<div><dt>닉네임</dt><dd>@${teamMessage.nickname}</dd></div>
+					<div><dt>직위</dt><dd>${teamMessage.role}</dd></div>
 					<div><dt>상세 내용</dt><dd>${teamMessage.content}</dd></div>
 				</dl>
 				${brandMark("brand-mark--detail")}

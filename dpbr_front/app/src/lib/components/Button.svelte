@@ -42,7 +42,9 @@
 	onmouseleave={handleMouseUp}
 	disabled={buttonState === "disabled"}
 	class="w-full py-3 px-4 rounded-lg font-medium text-base relative
-		{variant === 'primary' ? 'bg-white text-text-primary' : 'bg-primary text-white'}
+		{variant === 'primary'
+		? 'bg-yt-chip-active text-yt-chip-active-text'
+		: 'bg-yt-chip text-yt-text'}
 		{buttonState === 'disabled'
 		? 'opacity-50 cursor-not-allowed'
 		: 'cursor-pointer'} {className}"

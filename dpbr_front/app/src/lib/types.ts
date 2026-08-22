@@ -27,6 +27,7 @@ export interface SettlementItem {
 export interface TeamMessageItem {
 	id: string;
 	name: string;
+	nickname: string;
 	role: string;
 	title: string;
 	content: string;

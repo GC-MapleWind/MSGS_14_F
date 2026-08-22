@@ -45,13 +45,13 @@
 	<a
 		href="/member/admin-team"
 		class={`${itemClass} ${currentPath.startsWith("/member/admin-team") ? "text-yt-text" : "text-yt-text-muted"}`}
-		aria-label="운영팀 한마디"
+		aria-label="운영진 한마디"
 	>
 		<Megaphone
 			size={23}
 			strokeWidth={currentPath.startsWith("/member/admin-team") ? 2.4 : 1.8}
 		/>
-		<span class="text-[9px] leading-3 whitespace-nowrap">운영팀 한마디</span>
+		<span class="text-[9px] leading-3 whitespace-nowrap">운영진 한마디</span>
 	</a>
 
 	<button

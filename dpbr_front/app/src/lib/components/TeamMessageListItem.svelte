@@ -35,7 +35,7 @@
 			>{item.title}</span
 		>
 		<span class="text-[13px] font-normal text-yt-text-muted"
-			>{item.name} {item.role}</span
+			>@{item.nickname} · {item.role}</span
 		>
 	</div>
 </a>

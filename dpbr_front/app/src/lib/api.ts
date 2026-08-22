@@ -167,6 +167,7 @@ interface CommentResponse {
 interface TeamMemberResponse {
 	id: number;
 	name: string;
+	nickname: string;
 	role: string;
 	profile_img_url: string | null;
 	message: {
@@ -477,6 +478,7 @@ export async function getTeamMembers(): Promise<TeamMessageItem[]> {
 	return data.map((member) => ({
 		id: member.id.toString(),
 		name: member.name,
+		nickname: member.nickname || member.name,
 		role: member.role,
 		title: member.message?.title || '',
 		content: member.message?.content || '',
@@ -491,6 +493,7 @@ export async function getTeamMessageDetail(memberId: string): Promise<TeamMessag
 		return {
 			id: data.id.toString(),
 			name: data.name,
+			nickname: data.nickname || data.name,
 			role: data.role,
 			title: data.message?.title || '',
 			content: data.message?.content || '',

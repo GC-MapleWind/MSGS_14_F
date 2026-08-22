@@ -47,7 +47,7 @@
 		<a
 			href="/member/admin-team"
 			class={miniClass(currentPath.startsWith("/member/admin-team"))}
-			aria-label="운영팀 한마디"
+			aria-label="운영진 한마디"
 		>
 			<Megaphone
 				size={22}
@@ -55,7 +55,7 @@
 					? 2.4
 					: 1.6}
 			/>
-			<span class="text-[10px]">운영팀</span>
+			<span class="text-[10px]">운영진</span>
 		</a>
 		<button
 			type="button"
@@ -95,7 +95,7 @@
 					? 2.2
 					: 1.6}
 			/>
-			운영팀 한마디
+			운영진 한마디
 		</a>
 		<button
 			type="button"

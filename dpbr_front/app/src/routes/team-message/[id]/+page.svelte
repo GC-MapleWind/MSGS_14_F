@@ -41,7 +41,7 @@
 </script>
 
 <svelte:head>
-	<title>{teamMessage?.name ?? "운영팀 한마디"} - 단풍바람 14기</title>
+	<title>{teamMessage?.name ?? "운영진 한마디"} - 단풍바람 14기</title>
 </svelte:head>
 
 <div class="flex flex-col h-full">
@@ -72,11 +72,18 @@
 				<div class="flex gap-4">
 					<span
 						class="w-[72px] shrink-0 text-left whitespace-nowrap text-sm font-light text-yt-text-muted"
-						>직책</span
+						>닉네임</span
 					>
 					<span class="text-base text-yt-text"
-						>{teamMessage.role}</span
+						>@{teamMessage.nickname}</span
 					>
+				</div>
+				<div class="flex gap-4">
+					<span
+						class="w-[72px] shrink-0 text-left whitespace-nowrap text-sm font-light text-yt-text-muted"
+						>직위</span
+					>
+					<span class="text-base text-yt-text">{teamMessage.role}</span>
 				</div>
 			</div>
 
@@ -110,7 +117,7 @@
 		</div>
 	{:else}
 		<div class="flex-1 flex items-center justify-center">
-			<p class="text-yt-text-muted">운영팀 한마디를 찾을 수 없습니다.</p>
+			<p class="text-yt-text-muted">운영진 한마디를 찾을 수 없습니다.</p>
 		</div>
 	{/if}
 </div>

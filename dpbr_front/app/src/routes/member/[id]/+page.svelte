@@ -27,16 +27,17 @@
 	const ADMIN_TEAM_INFO = {
 		generation: "단풍바람 14기",
 		university: "가천대학교",
-		role: "운영팀",
+		role: "비대위",
 	};
 
-	const ADMIN_TEAM_NAME = "단풍바람 14기 운영팀";
+	const ADMIN_TEAM_NAME = "단풍바람 14기 비대위";
+	const INTERNAL_ADMIN_TEAM_NAME = "COMMUNITY_PROJECT 운영팀";
 	const ADMIN_TEAM_FALLBACK_ID = "admin-team";
 
 	const fallbackAdminCharacter: Character = {
 		id: ADMIN_TEAM_FALLBACK_ID,
 		name: ADMIN_TEAM_NAME,
-		nickname: "운영팀",
+		nickname: "비대위",
 		avatarUrl: DEFAULT_AVATAR_URL,
 		level: 0,
 		job: "운영",
@@ -48,7 +49,8 @@
 	let character = $state<Character | null>(null);
 	let isAdminTeam = $derived(
 		characterId === ADMIN_TEAM_FALLBACK_ID ||
-			character?.name === ADMIN_TEAM_NAME,
+			character?.name === ADMIN_TEAM_NAME ||
+			character?.name === INTERNAL_ADMIN_TEAM_NAME,
 	);
 	let settlements = $state<SettlementItem[]>([]);
 	let settlementsTotal = $state(0);
@@ -194,7 +196,13 @@
 						adminCharacter.id.toString(),
 					);
 					if (requestVersion !== dataLoadVersion) return;
-					character = adminData || fallbackAdminCharacter;
+					character = adminData
+						? {
+								...adminData,
+								name: ADMIN_TEAM_NAME,
+								nickname: "비대위",
+							}
+						: fallbackAdminCharacter;
 				} else {
 					character = fallbackAdminCharacter;
 				}
@@ -219,7 +227,15 @@
 				return;
 			}
 
-			if (charData.name === ADMIN_TEAM_NAME) {
+			if (
+				charData.name === ADMIN_TEAM_NAME ||
+				charData.name === INTERNAL_ADMIN_TEAM_NAME
+			) {
+				character = {
+					...charData,
+					name: ADMIN_TEAM_NAME,
+					nickname: "비대위",
+				};
 				const loadedTeamMessages = await getTeamMembers();
 				if (requestVersion !== dataLoadVersion) return;
 				teamMessages = uniqueById(loadedTeamMessages);
@@ -448,7 +464,7 @@
 				</div>
 			{/if}
 
-			<!-- 본문: 3열 쇼츠 그리드 / 운영팀 한마디 목록 -->
+			<!-- 본문: 3열 쇼츠 그리드 / 운영진 한마디 목록 -->
 			{#if isAdminTeam ? teamMessages.length > 0 : settlements.length > 0}
 				{#if isAdminTeam}
 					<div class="flex flex-col pt-2">
@@ -479,7 +495,7 @@
 				<div class="flex items-center justify-center py-12">
 					<p class="text-yt-text-muted">
 						{isAdminTeam
-							? "운영팀 정보가 없습니다."
+							? "운영진 정보가 없습니다."
 							: "등록된 결산이 없습니다."}
 					</p>
 				</div>

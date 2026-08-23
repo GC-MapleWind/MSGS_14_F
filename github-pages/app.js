@@ -452,11 +452,11 @@ async function shareSettlement(id) {
 	}
 }
 
-function channelToolbar() {
+function channelToolbar(showOptions = true) {
 	return `
 		<header class="channel-toolbar">
 			<a class="icon-button" href="${routeUrl("/")}" data-route="/" aria-label="뒤로가기">${icons.back}</a>
-			<div aria-hidden="true"><span>${icons.search}</span><span class="channel-toolbar__more">${icons.more}</span></div>
+			<div aria-hidden="true"><span>${icons.search}</span>${showOptions ? `<span class="channel-toolbar__more">${icons.more}</span>` : ""}</div>
 		</header>
 	`;
 }
@@ -496,7 +496,7 @@ function renderAdminTeam() {
 	document.title = "운영진 한마디 - 단풍바람 14기";
 	app.innerHTML = shell(`
 		<section class="channel-view">
-			${channelToolbar()}
+			${channelToolbar(false)}
 			<div class="channel-scroll">
 				<div class="channel-banner channel-banner--team"></div>
 				<div class="channel-header">
@@ -570,6 +570,7 @@ function renderLogin() {
 	const next = normalizeAppRoute(new URLSearchParams(location.search).get("next"), "/");
 	app.innerHTML = shell(`
 		<main class="auth-page">
+			<a class="auth-back icon-button" href="${routeUrl("/")}" data-route="/" aria-label="뒤로가기">${icons.back}</a>
 			<section class="auth-card">
 				${brandMark("brand-mark--auth")}
 				<form class="auth-form" data-login-form>

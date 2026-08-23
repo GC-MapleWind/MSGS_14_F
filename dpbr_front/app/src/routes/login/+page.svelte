@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { goto } from "$app/navigation";
 	import { onMount } from "svelte";
+	import { ArrowLeft } from "lucide-svelte";
 	import { env } from "$env/dynamic/public";
 	import InputBox from "$lib/components/InputBox.svelte";
 	import Button from "$lib/components/Button.svelte";
@@ -131,6 +132,15 @@
 </svelte:head>
 
 <div class="min-h-screen bg-yt-bg flex flex-col px-4 py-8">
+	<button
+		type="button"
+		onclick={() => history.back()}
+		class="absolute left-4 top-4 p-2 text-yt-text"
+		aria-label="뒤로가기"
+	>
+		<ArrowLeft size={24} strokeWidth={1.8} />
+	</button>
+
 	<!-- 메인 컨텐츠 -->
 	<div class="flex-1 flex items-center justify-center">
 		<div class="w-full max-w-md flex flex-col items-center gap-12">

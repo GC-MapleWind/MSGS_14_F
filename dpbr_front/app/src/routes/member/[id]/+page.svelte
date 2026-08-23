@@ -25,9 +25,7 @@
 	import type { Snapshot } from "./$types";
 
 	const ADMIN_TEAM_INFO = {
-		generation: "단풍바람 14기",
-		university: "가천대학교",
-		role: "비대위",
+		club: "가천대학교 메이플동아리",
 	};
 
 	const ADMIN_TEAM_NAME = "단풍바람 14기 비대위";
@@ -413,8 +411,7 @@
 					>
 					<span class="text-xs text-yt-text-muted">
 						{#if isAdminTeam}
-							{ADMIN_TEAM_INFO.generation} · {ADMIN_TEAM_INFO.university}
-							· {ADMIN_TEAM_INFO.role}
+							{ADMIN_TEAM_INFO.club}
 						{:else}
 							Lv.{character.level} · {character.server} · {character.job}
 						{/if}

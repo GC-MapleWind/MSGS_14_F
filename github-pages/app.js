@@ -501,7 +501,7 @@ function renderAdminTeam() {
 				<div class="channel-banner channel-banner--team"></div>
 				<div class="channel-header">
 					<div class="profile-avatar profile-avatar--team">${icons.megaphone}</div>
-					<div class="channel-copy"><strong>단풍바람 14기 비대위</strong><span>@비대위</span><small>14기 · 가천대학교 · 비대위</small><small>한마디 1개</small></div>
+					<div class="channel-copy"><strong>단풍바람 14기 비대위</strong><span>@비대위</span><small>가천대학교 메이플동아리</small><small>한마디 1개</small></div>
 				</div>
 				<div class="channel-tabs"><span>홈</span><strong>한마디</strong></div>
 				<div class="team-feed">

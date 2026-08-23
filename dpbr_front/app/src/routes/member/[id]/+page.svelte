@@ -365,8 +365,8 @@
 				<ArrowLeft size={24} strokeWidth={1.8} />
 			</button>
 			<div class="flex items-center text-yt-text" aria-hidden="true">
-				<span class="p-2"><Search size={22} strokeWidth={1.8} /></span>
 				{#if !isAdminTeam}
+					<span class="p-2"><Search size={22} strokeWidth={1.8} /></span>
 					<span class="p-2"><EllipsisVertical size={22} /></span>
 				{/if}
 			</div>

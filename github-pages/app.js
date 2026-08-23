@@ -452,11 +452,11 @@ async function shareSettlement(id) {
 	}
 }
 
-function channelToolbar(showOptions = true) {
+function channelToolbar(showOptions = true, showSearch = true) {
 	return `
 		<header class="channel-toolbar">
 			<a class="icon-button" href="${routeUrl("/")}" data-route="/" aria-label="뒤로가기">${icons.back}</a>
-			<div aria-hidden="true"><span>${icons.search}</span>${showOptions ? `<span class="channel-toolbar__more">${icons.more}</span>` : ""}</div>
+			<div aria-hidden="true">${showSearch ? `<span>${icons.search}</span>` : ""}${showOptions ? `<span class="channel-toolbar__more">${icons.more}</span>` : ""}</div>
 		</header>
 	`;
 }
@@ -496,7 +496,7 @@ function renderAdminTeam() {
 	document.title = "운영진 한마디 - 단풍바람 14기";
 	app.innerHTML = shell(`
 		<section class="channel-view">
-			${channelToolbar(false)}
+			${channelToolbar(false, false)}
 			<div class="channel-scroll">
 				<div class="channel-banner channel-banner--team"></div>
 				<div class="channel-header">

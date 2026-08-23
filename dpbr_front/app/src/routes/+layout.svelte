@@ -43,6 +43,10 @@
 	const currentPath = $derived(normalizePath($page.url.pathname));
 	const isLoginRoute = $derived(currentPath.startsWith("/login"));
 	const isSignupRoute = $derived(currentPath.startsWith("/auth/signup"));
+	const showDesktopSearch = $derived(
+		!currentPath.startsWith("/member/admin-team") &&
+			!currentPath.startsWith("/team-message"),
+	);
 	// 쇼츠 뷰어·로그인 등 풀스크린 화면에서는 하단 네비게이션 숨김
 	const showBottomNav = $derived(
 		!currentPath.startsWith("/shorts") &&
@@ -154,26 +158,28 @@
 
 		<!-- 중앙: 이름·닉네임·쇼츠 내용 통합 검색 -->
 		<div class="flex-1 flex items-center justify-center min-w-0 px-8">
-			<form
-				onsubmit={submitSearch}
-				class="flex items-center w-full max-w-[540px]"
-				role="search"
-			>
-				<input
-					type="search"
-					bind:value={searchInput}
-					placeholder="이름, 닉네임, 내용 검색"
-					class="flex-1 min-w-0 h-10 px-4 rounded-l-full border border-yt-border bg-yt-bg text-yt-text placeholder-yt-text-muted outline-none focus:border-blue-500"
-					aria-label="이름, 닉네임, 내용 검색"
-				/>
-				<button
-					type="submit"
-					class="h-10 px-5 rounded-r-full border border-l-0 border-yt-border bg-yt-surface text-yt-text hover:bg-yt-surface-hover"
-					aria-label="검색"
+			{#if showDesktopSearch}
+				<form
+					onsubmit={submitSearch}
+					class="flex items-center w-full max-w-[540px]"
+					role="search"
 				>
-					<Search size={18} strokeWidth={1.8} />
-				</button>
-			</form>
+					<input
+						type="search"
+						bind:value={searchInput}
+						placeholder="이름, 닉네임, 내용 검색"
+						class="flex-1 min-w-0 h-10 px-4 rounded-l-full border border-yt-border bg-yt-bg text-yt-text placeholder-yt-text-muted outline-none focus:border-blue-500"
+						aria-label="이름, 닉네임, 내용 검색"
+					/>
+					<button
+						type="submit"
+						class="h-10 px-5 rounded-r-full border border-l-0 border-yt-border bg-yt-surface text-yt-text hover:bg-yt-surface-hover"
+						aria-label="검색"
+					>
+						<Search size={18} strokeWidth={1.8} />
+					</button>
+				</form>
+			{/if}
 		</div>
 
 		<!-- 우측: 로그인/내 페이지 필 -->

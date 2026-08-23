@@ -76,6 +76,7 @@
 	let resumeAudioAfterComments = false;
 	let audioLoadId = 0;
 	let audioAnimationFrame: number | null = null;
+	let audioAutoAdvanceTimer: ReturnType<typeof setTimeout> | null = null;
 	let isShortsSearchOpen = $state(false);
 	let shortsSearchInput = $state("");
 	let shortsSearchElement = $state<HTMLInputElement | null>(null);
@@ -152,6 +153,35 @@
 		audioAnimationFrame = null;
 	}
 
+	const AUDIO_AUTO_ADVANCE_DELAY_MS = 500;
+
+	function cancelAudioAutoAdvance() {
+		if (!audioAutoAdvanceTimer) return;
+		clearTimeout(audioAutoAdvanceTimer);
+		audioAutoAdvanceTimer = null;
+	}
+
+	function scheduleAudioAutoAdvance() {
+		cancelAudioAutoAdvance();
+		if (audioPausedByUser || !currentItem) return;
+
+		const scheduledLoadId = audioLoadId;
+		const scheduledFeedKey = currentItem.feedKey;
+		audioAutoAdvanceTimer = setTimeout(() => {
+			audioAutoAdvanceTimer = null;
+			if (
+				scheduledLoadId !== audioLoadId ||
+				currentItem?.feedKey !== scheduledFeedKey ||
+				audioPausedByUser ||
+				!audioSegmentEnded
+			) {
+				return;
+			}
+
+			void scrollToNext();
+		}, AUDIO_AUTO_ADVANCE_DELAY_MS);
+	}
+
 	function getPlayableAudioDuration(
 		element: HTMLAudioElement,
 		item: SettlementItem,
@@ -210,6 +240,7 @@
 		element.volume = 0;
 		audioProgress = 1;
 		audioSegmentEnded = true;
+		scheduleAudioAutoAdvance();
 		return true;
 	}
 
@@ -275,6 +306,7 @@
 		const item = currentItem;
 		if (!element || !item?.audioUrl) return;
 
+		cancelAudioAutoAdvance();
 		try {
 			seekAudioToConfiguredStart(element, item);
 		} catch {
@@ -295,6 +327,7 @@
 		if (!element || !item?.audioUrl || audioError) return;
 
 		if (isAudioPlaying) {
+			cancelAudioAutoAdvance();
 			audioPausedByUser = true;
 			stopAudioAnimation();
 			element.pause();
@@ -356,6 +389,7 @@
 		isAudioPlaying = false;
 		audioProgress = 1;
 		audioSegmentEnded = true;
+		scheduleAudioAutoAdvance();
 	}
 
 	function handleAudioError() {
@@ -986,6 +1020,7 @@
 		if (!element) return;
 
 		const loadId = ++audioLoadId;
+		cancelAudioAutoAdvance();
 		stopAudioAnimation();
 		element.pause();
 		element.volume = 1;
@@ -1027,6 +1062,7 @@
 
 		return () => {
 			element.removeEventListener("loadedmetadata", handleMetadataLoaded);
+			cancelAudioAutoAdvance();
 			stopAudioAnimation();
 			element.pause();
 			element.volume = 1;

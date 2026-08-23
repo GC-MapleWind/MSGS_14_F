@@ -46,10 +46,10 @@
 - Spacing/layout rhythm: 모바일 하단 내비게이션과 데스크톱 가이드 레일의 기존 간격 유지
 - Shape/radius/elevation: 기존 원형 액션과 둥근 표면 토큰 재사용
 - Motion: 기존 hover, active, snap 동작 유지; 불필요한 전환 추가 금지
-- Imagery/iconography: Lucide 아이콘과 프로젝트 로고 자산 재사용. 빨간 파비콘 안의 단풍바람 심볼은 캔버스 가장자리와 충분한 여백을 두어 작은 브라우저 탭에서도 답답해 보이지 않게 한다.
+- Imagery/iconography: Lucide 아이콘과 프로젝트 로고 자산 재사용. 빨간 파비콘 안의 단풍바람 심볼은 캔버스 가장자리와 충분한 여백을 두어 작은 브라우저 탭에서도 답답해 보이지 않게 한다. 탐색 헤더는 YouTube 워드마크 문법처럼 `빨간 단풍바람 심볼 + 굵은 단풍바람 텍스트`를 한 덩어리로 표시하며, 쇼츠 위에서는 텍스트를 흰색으로 전환한다.
 
 ## Components
-- Existing components to reuse: `Header`, `BottomNav`, `GuideRail`, `VideoCard`, `ShortsThumbnail`, `CommentItem`, `BottomSheetLogin`
+- Existing components to reuse: `BrandWordmark`, `Header`, `BottomNav`, `GuideRail`, `VideoCard`, `ShortsThumbnail`, `CommentItem`, `BottomSheetLogin`
 - New/changed components: `BottomNav` 4버튼 구조와 날짜순 재생 액션, `Header`의 검색 중심 모바일 상단, `GuideRail` 자유 재생 행, 쇼츠 우측 댓글 액션과 `SettlementCommentsSheet`, 쇼츠 재생·일시정지 컨트롤과 `AudioInfoSheet`, `VideoCard`의 결산 개수 배지, 9:16 `단풍바람 14기 캐릭터 카드`
 - Variants and states: 모바일 검색 닫힘/열림, 활성 경로, 날짜순·자유 재생 조회 중, 댓글 시트 닫힘/열림, BGM 재생/일시정지/종료/자동재생 차단/오류, BGM 정보 시트 닫힘/열림, 댓글 로딩·비어 있음·오류·작성 중, 검색 중 로딩, 검색 결과 없음, API 오류 토스트
 - Token/component ownership: 색상은 `app.css`, 내비게이션 동작은 `src/lib/utils/nav.ts`

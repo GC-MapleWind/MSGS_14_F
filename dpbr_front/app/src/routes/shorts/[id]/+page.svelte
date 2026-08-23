@@ -24,6 +24,7 @@
 	} from "lucide-svelte";
 	import SettlementCommentsSheet from "$lib/components/SettlementCommentsSheet.svelte";
 	import AudioInfoSheet from "$lib/components/AudioInfoSheet.svelte";
+	import BrandWordmark from "$lib/components/BrandWordmark.svelte";
 	import {
 		getCharacterById,
 		getRandomSettlement,
@@ -1343,12 +1344,7 @@
 					<ArrowLeft size={24} />
 				</button>
 				<a href="/" class="flex items-center" aria-label="홈으로">
-					<img
-						src="/images/logos/logo-text-mono.svg"
-						alt="단풍바람"
-						class="h-[16px] object-contain invert"
-						draggable="false"
-					/>
+					<BrandWordmark inverse compact />
 				</a>
 			</div>
 			<div class="flex items-center text-white">

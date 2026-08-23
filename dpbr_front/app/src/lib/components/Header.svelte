@@ -4,6 +4,7 @@
 	import { page } from "$app/stores";
 	import { ArrowLeft, Search, X } from "lucide-svelte";
 	import { toast } from "$lib/stores/toast";
+	import BrandWordmark from "$lib/components/BrandWordmark.svelte";
 
 	interface Props {
 		variant?: "main" | "detail" | "close" | "save";
@@ -125,14 +126,9 @@
 				type="button"
 				onclick={handleLogoClick}
 				class="flex items-center justify-center active:scale-95 transition-transform"
-				aria-label="COMMUNITY_PROJECT 로고"
+				aria-label="단풍바람 홈"
 			>
-				<img
-					src="/images/logos/logo-text-mono.svg"
-					alt="COMMUNITY_PROJECT"
-					class="h-[18px] object-contain dark:invert"
-					draggable="false"
-				/>
+				<BrandWordmark />
 			</button>
 			<div class="ml-auto flex items-center gap-1">
 				<button

@@ -9,6 +9,7 @@
 	import ConfirmPopup from "$lib/components/ConfirmPopup.svelte";
 	import BottomNav from "$lib/components/BottomNav.svelte";
 	import GuideRail from "$lib/components/GuideRail.svelte";
+	import BrandWordmark from "$lib/components/BrandWordmark.svelte";
 	import { authStore } from "$lib/stores/auth";
 	import { guideCollapsed, logoutConfirmOpen } from "$lib/stores/ui";
 	import { theme } from "$lib/stores/theme";
@@ -147,12 +148,7 @@
 				<Menu size={22} strokeWidth={1.8} />
 			</button>
 			<a href="/" class="flex items-center px-2" aria-label="홈으로">
-				<img
-					src="/images/logos/logo-text-mono.svg"
-					alt="COMMUNITY_PROJECT"
-					class="h-[18px] object-contain dark:invert"
-					draggable="false"
-				/>
+				<BrandWordmark />
 			</a>
 		</div>
 

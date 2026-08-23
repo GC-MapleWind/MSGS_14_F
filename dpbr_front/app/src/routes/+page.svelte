@@ -22,18 +22,9 @@
 	let hasMounted = $state(false);
 	let requestVersion = 0;
 
-	// 검색은 서버 페이지네이션, 서버 칩은 현재 결과에서 클라이언트 필터링
-	let selectedServer = $state<string | null>(null);
+	// 검색은 서버 페이지네이션으로 처리한다.
 	const searchQuery = $derived(
 		($pageStore.url.searchParams.get("q") ?? "").trim(),
-	);
-	const servers = $derived(
-		[...new Set(characters.map((c) => c.server))].filter(
-			(server) => server !== "에오스",
-		),
-	);
-	const visibleCharacters = $derived(
-		characters.filter((c) => !selectedServer || c.server === selectedServer),
 	);
 
 	function uniqueById<T extends { id: string }>(items: T[]): T[] {
@@ -101,7 +92,6 @@
 		requestVersion += 1;
 		const version = requestVersion;
 		loadedSearchQuery = query;
-		selectedServer = null;
 		characters = [];
 		page = 1;
 		hasMore = true;
@@ -182,27 +172,18 @@
 			</div>
 		{:else}
 			<!-- 칩 행 (유튜브 홈 필터 칩) -->
-			{#if servers.length > 0}
-				<div
-					class="hidden lg:flex items-center gap-3 px-6 py-3 sticky top-0 bg-yt-bg z-20 max-w-[1400px] mx-auto w-full"
+			<div
+				class="hidden lg:flex items-center px-6 py-3 sticky top-0 bg-yt-bg z-20 max-w-[1400px] mx-auto w-full"
+			>
+				<span
+					aria-current="page"
+					class="px-3 py-1.5 rounded-lg text-sm whitespace-nowrap bg-yt-chip-active text-yt-chip-active-text"
 				>
-					{#each servers as server (server)}
-						<button
-							type="button"
-							onclick={() => (selectedServer = server)}
-							class={`px-3 py-1.5 rounded-lg text-sm whitespace-nowrap transition-colors ${
-								selectedServer === server
-									? "bg-yt-chip-active text-yt-chip-active-text"
-									: "bg-yt-chip text-yt-text hover:bg-yt-surface-hover"
-							}`}
-						>
-							{server}
-						</button>
-					{/each}
-				</div>
-			{/if}
+					Shorts
+				</span>
+			</div>
 
-			{#if visibleCharacters.length === 0}
+			{#if characters.length === 0}
 				<div class="flex items-center justify-center py-20">
 					<p class="text-yt-text-muted">검색 결과가 없습니다.</p>
 				</div>
@@ -211,7 +192,7 @@
 			<div
 				class="flex flex-col lg:grid lg:grid-cols-3 xl:grid-cols-4 lg:gap-x-4 lg:gap-y-4 lg:px-6 lg:pt-4 lg:pb-10 lg:max-w-[1400px] lg:mx-auto lg:w-full"
 			>
-				{#each visibleCharacters as character (character.id)}
+				{#each characters as character (character.id)}
 					<VideoCard {character} />
 				{/each}
 			</div>

@@ -3,6 +3,7 @@
 	import {
 		Home,
 		Shuffle,
+		ListOrdered,
 		Megaphone,
 		CircleUserRound,
 		Monitor,
@@ -12,7 +13,11 @@
 	import { authStore } from "$lib/stores/auth";
 	import { guideCollapsed } from "$lib/stores/ui";
 	import { theme, type ThemePreference } from "$lib/stores/theme";
-	import { openMyPage, openRandomSettlement } from "$lib/utils/nav";
+	import {
+		openChronologicalSettlements,
+		openMyPage,
+		openRandomSettlement,
+	} from "$lib/utils/nav";
 
 	const currentPath = $derived($page.url.pathname);
 
@@ -68,6 +73,15 @@
 		</button>
 		<button
 			type="button"
+			onclick={() => void openChronologicalSettlements()}
+			class={miniClass(false)}
+			aria-label="날짜순 재생: 오래된 결산부터 보기"
+		>
+			<ListOrdered size={22} strokeWidth={1.6} />
+			<span class="text-[10px]">날짜순 재생</span>
+		</button>
+		<button
+			type="button"
 			onclick={openMyPage}
 			class={miniClass(false)}
 			aria-label="내 페이지"
@@ -104,6 +118,14 @@
 		>
 			<Shuffle size={20} strokeWidth={1.6} />
 			자유 재생
+		</button>
+		<button
+			type="button"
+			onclick={() => void openChronologicalSettlements()}
+			class={rowClass(false)}
+		>
+			<ListOrdered size={20} strokeWidth={1.6} />
+			날짜순 재생
 		</button>
 		<button type="button" onclick={openMyPage} class={rowClass(false)}>
 			<CircleUserRound size={20} strokeWidth={1.6} />

@@ -462,6 +462,37 @@ export async function createSettlementComment(
 }
 
 /**
+ * 내 댓글 수정
+ */
+export async function updateComment(
+	id: string,
+	content: string
+): Promise<SettlementComment> {
+	const accessToken = getAccessToken();
+	if (!accessToken) {
+		throw new Error('로그인이 필요합니다.');
+	}
+
+	const updated = await apiCall<CommentResponse>(`/comments/${id}`, {
+		method: 'PATCH',
+		headers: {
+			Authorization: `Bearer ${accessToken}`
+		},
+		body: JSON.stringify({ content })
+	});
+
+	return {
+		id: updated.id.toString(),
+		settlementId: updated.settlement_id?.toString() ?? '',
+		userId: updated.user_id,
+		author: updated.author,
+		authorAvatar: DEFAULT_AVATAR_URL,
+		content: updated.content,
+		createdAt: formatCommentDateTime(updated.created_at)
+	};
+}
+
+/**
  * 내 댓글 삭제
  */
 export async function deleteComment(id: string): Promise<void> {

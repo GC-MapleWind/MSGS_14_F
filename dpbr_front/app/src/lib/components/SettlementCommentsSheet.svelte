@@ -182,6 +182,11 @@
 				{#each comments as comment (comment.id)}
 					<CommentItem
 						{comment}
+						onUpdate={(updatedComment) => {
+							comments = comments.map((item) =>
+								item.id === updatedComment.id ? updatedComment : item,
+							);
+						}}
 						onDelete={(id) => {
 							comments = comments.filter((item) => item.id !== id);
 						}}

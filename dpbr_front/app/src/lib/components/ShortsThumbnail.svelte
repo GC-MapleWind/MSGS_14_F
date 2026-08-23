@@ -2,6 +2,7 @@
 	import { EllipsisVertical } from "lucide-svelte";
 	import type { SettlementItem } from "$lib/types";
 	import { handleImageError } from "$lib/utils/image";
+	import { getSettlementCaption } from "$lib/utils/settlement";
 
 	interface Props {
 		item: SettlementItem;
@@ -42,9 +43,9 @@
 		class="absolute bottom-0 left-0 right-0 px-2 pb-2 pt-8 bg-gradient-to-t from-black/80 to-transparent flex flex-col gap-0.5"
 	>
 		<p
-			class="text-[12px] font-semibold text-white leading-tight line-clamp-2 drop-shadow"
+			class="text-[12px] font-semibold text-white leading-tight line-clamp-2 whitespace-pre-line drop-shadow"
 		>
-			{item.title}
+			{getSettlementCaption(item)}
 		</p>
 		<span class="text-[10px] text-white/80 drop-shadow"
 			>{formatDate(item.acquiredAt)}</span

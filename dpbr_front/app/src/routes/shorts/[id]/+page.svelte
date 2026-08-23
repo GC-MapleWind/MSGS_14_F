@@ -28,6 +28,7 @@
 		getSettlementsPaginated,
 	} from "$lib/api";
 	import { handleImageError } from "$lib/utils/image";
+	import { getSettlementCaption } from "$lib/utils/settlement";
 	import { toast } from "$lib/stores/toast";
 	import type { Character, SettlementItem } from "$lib/types";
 	type FeedSettlement = SettlementItem & { feedKey: string };
@@ -1077,7 +1078,7 @@
 		const shareUrl = getSettlementShareUrl(item);
 		const itemCharacter = getCharacterForItem(item);
 		const shareTitle = `${itemCharacter?.nickname ?? "단풍바람 14기"} · ${item.title}`;
-		const shareText = `${item.title}\n${formatDate(item.acquiredAt)}`;
+		const shareText = `${getSettlementCaption(item)}\n${formatDate(item.acquiredAt)}`;
 
 		try {
 			if (typeof navigator.share !== "function") {
@@ -1496,9 +1497,9 @@
 							class="absolute left-4 right-[72px] bottom-[16px] z-10 flex flex-col gap-1"
 						>
 							<p
-								class="text-[15px] leading-snug drop-shadow line-clamp-2"
+								class="text-[15px] leading-snug drop-shadow line-clamp-2 whitespace-pre-line"
 							>
-								{item.title}
+								{getSettlementCaption(item)}
 							</p>
 							<span class="text-[12px] text-white/70 drop-shadow"
 								>{formatDate(item.acquiredAt)}</span

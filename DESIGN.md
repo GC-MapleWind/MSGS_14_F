@@ -46,7 +46,7 @@
 - Spacing/layout rhythm: 모바일 하단 내비게이션과 데스크톱 가이드 레일의 기존 간격 유지
 - Shape/radius/elevation: 기존 원형 액션과 둥근 표면 토큰 재사용
 - Motion: 기존 hover, active, snap 동작 유지; 불필요한 전환 추가 금지
-- Imagery/iconography: Lucide 아이콘과 프로젝트 로고 자산 재사용
+- Imagery/iconography: Lucide 아이콘과 프로젝트 로고 자산 재사용. 탐색 헤더의 워드마크는 홈 16px, 쇼츠 14px 높이로 작게 유지해 콘텐츠보다 앞서 보이지 않게 한다.
 
 ## Components
 - Existing components to reuse: `Header`, `BottomNav`, `GuideRail`, `VideoCard`, `ShortsThumbnail`, `CommentItem`, `BottomSheetLogin`

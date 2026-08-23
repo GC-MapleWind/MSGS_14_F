@@ -130,7 +130,7 @@
 				<img
 					src="/images/logos/logo-text-mono.svg"
 					alt="COMMUNITY_PROJECT"
-					class="h-[18px] object-contain dark:invert"
+					class="h-4 object-contain dark:invert"
 					draggable="false"
 				/>
 			</button>

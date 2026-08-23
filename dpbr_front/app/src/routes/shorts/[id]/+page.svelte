@@ -1310,7 +1310,7 @@
 					<img
 						src="/images/logos/logo-text-mono.svg"
 						alt="단풍바람"
-						class="h-[16px] object-contain invert"
+						class="h-3.5 object-contain invert"
 						draggable="false"
 					/>
 				</a>

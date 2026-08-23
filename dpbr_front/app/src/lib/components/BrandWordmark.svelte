@@ -9,14 +9,15 @@
 
 <span class="inline-flex items-center gap-1.5 whitespace-nowrap" aria-hidden="true">
 	<img
-		src="/images/icons/symbol-logo-color.svg"
+		src="/images/icons/app_favicon.png?v=17"
 		alt=""
-		class={compact ? "h-5 w-[18px] shrink-0 object-contain" : "h-6 w-[22px] shrink-0 object-contain"}
+		class={compact ? "size-5 shrink-0" : "size-6 shrink-0"}
 		draggable="false"
 	/>
-	<span
-		class={`font-bold leading-none tracking-[-0.055em] ${inverse ? "text-white" : "text-yt-text"} ${compact ? "text-[18px]" : "text-xl"}`}
-	>
-		단풍바람
-	</span>
+	<img
+		src={inverse ? "/images/logos/logo-text-white.svg" : "/images/logos/logo-text-mono.svg"}
+		alt=""
+		class={`${compact ? "h-4" : "h-[18px]"} w-auto shrink-0 object-contain ${inverse ? "" : "dark:invert"}`}
+		draggable="false"
+	/>
 </span>

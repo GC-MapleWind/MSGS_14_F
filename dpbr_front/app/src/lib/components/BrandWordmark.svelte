@@ -9,9 +9,9 @@
 
 <span class="inline-flex items-center gap-1.5 whitespace-nowrap" aria-hidden="true">
 	<img
-		src="/images/icons/app_favicon.png?v=17"
+		src="/images/icons/symbol-logo-color.svg"
 		alt=""
-		class={compact ? "size-5 shrink-0" : "size-6 shrink-0"}
+		class={compact ? "h-5 w-[18px] shrink-0 object-contain" : "h-6 w-[22px] shrink-0 object-contain"}
 		draggable="false"
 	/>
 	<span

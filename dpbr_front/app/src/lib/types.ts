@@ -18,6 +18,9 @@ export interface SettlementItem {
 	description: string;
 	imageUrl: string;
 	audioUrl?: string | null;
+	audioTitle?: string | null;
+	audioArtist?: string | null;
+	audioSourceUrl?: string | null;
 	audioStartSeconds?: number;
 	audioDurationSeconds?: number | null;
 	audioFadeOutSeconds?: number | null;

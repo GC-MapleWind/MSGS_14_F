@@ -14,12 +14,16 @@
 		ChevronDown,
 		Volume2,
 		VolumeX,
+		Play,
+		Pause,
+		Music2,
 		RotateCcw,
 		Home,
 		Link2,
 		UserRound,
 	} from "lucide-svelte";
 	import SettlementCommentsSheet from "$lib/components/SettlementCommentsSheet.svelte";
+	import AudioInfoSheet from "$lib/components/AudioInfoSheet.svelte";
 	import {
 		getCharacterById,
 		getRandomSettlement,
@@ -66,6 +70,10 @@
 	let audioSegmentEnded = $state(false);
 	let audioError = $state(false);
 	let audioProgress = $state(0);
+	let isAudioPlaying = $state(false);
+	let audioPausedByUser = $state(false);
+	let resumeAudioAfterVisibility = false;
+	let resumeAudioAfterComments = false;
 	let audioLoadId = 0;
 	let audioAnimationFrame: number | null = null;
 	let isShortsSearchOpen = $state(false);
@@ -73,6 +81,7 @@
 	let shortsSearchElement = $state<HTMLInputElement | null>(null);
 	let isSettingsOpen = $state(false);
 	let commentsSettlement = $state<SettlementItem | null>(null);
+	let audioInfoSettlement = $state<SettlementItem | null>(null);
 
 	// 데스크톱 외부 액션 레일이 참조하는 현재 슬라이드
 	const currentItem = $derived(
@@ -253,6 +262,7 @@
 			) {
 				audioError = true;
 				audioNeedsInteraction = false;
+				isAudioPlaying = false;
 				return;
 			}
 
@@ -273,8 +283,29 @@
 
 		stopAudioAnimation();
 		element.volume = 1;
+		audioPausedByUser = false;
 		audioSegmentEnded = false;
 		audioProgress = 0;
+		void tryPlayAudio(element, audioLoadId);
+	}
+
+	function toggleAudioPlayback() {
+		const element = audioElement;
+		const item = currentItem;
+		if (!element || !item?.audioUrl || audioError) return;
+
+		if (isAudioPlaying) {
+			audioPausedByUser = true;
+			stopAudioAnimation();
+			element.pause();
+			return;
+		}
+
+		audioPausedByUser = false;
+		if (audioSegmentEnded || audioNeedsInteraction) {
+			restartCurrentAudio();
+			return;
+		}
 		void tryPlayAudio(element, audioLoadId);
 	}
 
@@ -293,7 +324,12 @@
 			// 저장 실패 시 이번 세션에만 유지
 		}
 
-		if (!isAudioMuted && audioElement?.paused && !audioSegmentEnded) {
+		if (
+			!isAudioMuted &&
+			audioElement?.paused &&
+			!audioPausedByUser &&
+			!audioSegmentEnded
+		) {
 			void tryPlayAudio(audioElement, audioLoadId);
 		}
 	}
@@ -306,15 +342,25 @@
 		updateAudioPlaybackState(element, item);
 	}
 
+	function handleAudioPlay() {
+		isAudioPlaying = true;
+	}
+
+	function handleAudioPause() {
+		isAudioPlaying = false;
+	}
+
 	function handleAudioEnded() {
 		stopAudioAnimation();
 		if (audioElement) audioElement.volume = 0;
+		isAudioPlaying = false;
 		audioProgress = 1;
 		audioSegmentEnded = true;
 	}
 
 	function handleAudioError() {
 		if (!currentItem?.audioUrl) return;
+		isAudioPlaying = false;
 		audioError = true;
 		audioNeedsInteraction = false;
 	}
@@ -324,24 +370,21 @@
 		if (!element || !currentItem?.audioUrl) return;
 
 		if (document.hidden) {
+			resumeAudioAfterVisibility = isAudioPlaying;
 			element.pause();
 			return;
 		}
 
-		if (!commentsSettlement && !audioSegmentEnded && !audioError) {
+		if (
+			resumeAudioAfterVisibility &&
+			!commentsSettlement &&
+			!audioPausedByUser &&
+			!audioSegmentEnded &&
+			!audioError
+		) {
+			resumeAudioAfterVisibility = false;
 			void tryPlayAudio(element, audioLoadId);
 		}
-	}
-
-	function handleAudioGesture(event: PointerEvent) {
-		const target = event.target;
-		if (
-			target instanceof Element &&
-			target.closest("button, a, input, textarea, select")
-		) {
-			return;
-		}
-		if (audioNeedsInteraction) restartCurrentAudio();
 	}
 
 	function toggleLike(id: string) {
@@ -397,6 +440,15 @@
 	}
 
 	function handleWindowKeydown(event: KeyboardEvent) {
+		const target = event.target;
+		if (
+			event.code === "Space" &&
+			!(target instanceof Element && target.closest("input, textarea, button, a, select"))
+		) {
+			event.preventDefault();
+			toggleAudioPlayback();
+			return;
+		}
 		if (event.key !== "Escape") return;
 		if (isSettingsOpen) {
 			isSettingsOpen = false;
@@ -941,6 +993,10 @@
 		audioNeedsInteraction = false;
 		audioSegmentEnded = false;
 		audioError = false;
+		isAudioPlaying = false;
+		audioPausedByUser = false;
+		resumeAudioAfterVisibility = false;
+		resumeAudioAfterComments = false;
 		audioProgress = 0;
 
 		if (!audioUrl || !item) {
@@ -1158,21 +1214,30 @@
 	function openComments(item: SettlementItem) {
 		isSettingsOpen = false;
 		isShortsSearchOpen = false;
+		resumeAudioAfterComments = isAudioPlaying;
 		audioElement?.pause();
 		commentsSettlement = item;
 	}
 
 	function closeComments() {
 		commentsSettlement = null;
+		const shouldResume = resumeAudioAfterComments;
+		resumeAudioAfterComments = false;
 		if (
+			shouldResume &&
 			audioElement &&
 			currentItem?.audioUrl &&
+			!audioPausedByUser &&
 			!audioSegmentEnded &&
 			!audioError &&
 			!document.hidden
 		) {
 			void tryPlayAudio(audioElement, audioLoadId);
 		}
+	}
+
+	function openAudioInfo(item: SettlementItem) {
+		audioInfoSettlement = item;
 	}
 
 	function goBack() {
@@ -1378,7 +1443,6 @@
 				<div
 					bind:this={scrollContainer}
 					onscroll={handleScroll}
-					onpointerdown={handleAudioGesture}
 					role="presentation"
 					class="h-full flex flex-col overflow-y-auto overflow-x-hidden snap-y snap-mandatory no-scrollbar"
 				>
@@ -1419,30 +1483,55 @@
 						{#if item.audioUrl && index === currentIndex}
 							<button
 								type="button"
-								onclick={toggleAudioMute}
-								class="absolute top-4 right-4 z-20 w-10 h-10 rounded-full bg-black/55 hover:bg-black/70 flex items-center justify-center backdrop-blur-sm"
-								aria-label={isAudioMuted ? "소리 켜기" : "음소거"}
-								aria-pressed={isAudioMuted}
-							>
-								{#if isAudioMuted}
-									<VolumeX size={21} />
-								{:else}
-									<Volume2 size={21} />
-								{/if}
-							</button>
+								onclick={toggleAudioPlayback}
+								class="absolute inset-0 z-[1] cursor-default touch-pan-y"
+								aria-hidden="true"
+								tabindex="-1"
+							></button>
 
-							{#if audioNeedsInteraction || audioSegmentEnded}
+							<div class="absolute top-4 left-4 z-20 flex gap-2">
+								<button
+									type="button"
+									onclick={toggleAudioPlayback}
+									class="w-11 h-11 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center backdrop-blur-sm"
+									aria-label={isAudioPlaying ? "BGM 일시정지" : "BGM 재생"}
+								>
+									{#if isAudioPlaying}
+										<Pause size={22} fill="currentColor" />
+									{:else}
+										<Play size={22} fill="currentColor" />
+									{/if}
+								</button>
+								<button
+									type="button"
+									onclick={toggleAudioMute}
+									class="w-11 h-11 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center backdrop-blur-sm"
+									aria-label={isAudioMuted ? "소리 켜기" : "음소거"}
+									aria-pressed={isAudioMuted}
+								>
+									{#if isAudioMuted}
+										<VolumeX size={22} />
+									{:else}
+										<Volume2 size={22} />
+									{/if}
+								</button>
+							</div>
+
+							{#if audioNeedsInteraction || audioSegmentEnded || audioPausedByUser}
 								<div
 									class="absolute inset-0 z-20 flex items-center justify-center pointer-events-none"
 								>
 									<button
 										type="button"
-										onclick={restartCurrentAudio}
+										onclick={toggleAudioPlayback}
 										class="pointer-events-auto h-11 px-5 rounded-full bg-black/70 hover:bg-black/85 text-sm font-medium flex items-center gap-2 backdrop-blur-sm"
 									>
 										{#if audioSegmentEnded}
 											<RotateCcw size={18} />
 											다시 듣기
+										{:else if audioPausedByUser}
+											<Play size={18} fill="currentColor" />
+											재생
 										{:else}
 											<Volume2 size={18} />
 											탭해서 소리 재생
@@ -1458,11 +1547,12 @@
 							{/if}
 						{/if}
 
-						<!-- 채널 행: 아바타 + @핸들 + 구독 필 (실측 bottom 85px) -->
-						{#if itemCharacter}
-							<div
-								class="absolute left-4 right-[72px] bottom-[85px] z-10 flex items-center gap-2.5"
-							>
+						<!-- 채널·캡션·BGM: 우측 액션 레일을 피해 하나의 하단 스택으로 정렬 -->
+						<div
+							class="absolute left-4 right-[72px] bottom-[16px] z-10 flex flex-col items-start gap-1.5"
+						>
+							{#if itemCharacter}
+								<div class="mb-1 flex min-w-0 items-center gap-2.5">
 								<a
 									href="/member/{item.characterId}"
 									class="flex items-center gap-2.5 min-w-0"
@@ -1489,13 +1579,8 @@
 								>
 									구독
 								</a>
-							</div>
-						{/if}
-
-						<!-- 제목 + 획득일 (채널 행 아래) -->
-						<div
-							class="absolute left-4 right-[72px] bottom-[16px] z-10 flex flex-col gap-1"
-						>
+								</div>
+							{/if}
 							<p
 								class="text-[15px] leading-snug drop-shadow line-clamp-2 whitespace-pre-line"
 							>
@@ -1504,6 +1589,21 @@
 							<span class="text-[12px] text-white/70 drop-shadow"
 								>{formatDate(item.acquiredAt)}</span
 							>
+							{#if item.audioUrl}
+								<button
+									type="button"
+									onclick={() => openAudioInfo(item)}
+									class="mt-1 flex h-8 max-w-full items-center gap-2 rounded-full bg-white/20 px-3 text-[12px] font-medium backdrop-blur-sm hover:bg-white/30"
+									aria-label={`현재 BGM 정보: ${item.audioTitle || "곡명 미등록"}`}
+								>
+									<Music2 size={15} class="shrink-0" />
+									<span class="truncate">
+										{item.audioTitle || "현재 재생 중인 BGM"}{item.audioArtist
+											? ` · ${item.audioArtist}`
+											: ""}
+									</span>
+								</button>
+							{/if}
 						</div>
 
 						<!-- 우측 액션 레일: 실측(아이콘 32px, right 16px, 피치 60px). 데스크톱은 외부 레일 사용 -->
@@ -1722,12 +1822,21 @@
 		/>
 	{/if}
 
+	{#if audioInfoSettlement}
+		<AudioInfoSheet
+			settlement={audioInfoSettlement}
+			onClose={() => (audioInfoSettlement = null)}
+		/>
+	{/if}
+
 	<audio
 		bind:this={audioElement}
 		preload="auto"
 		ontimeupdate={handleAudioTimeUpdate}
 		onended={handleAudioEnded}
 		onerror={handleAudioError}
+		onplay={handleAudioPlay}
+		onpause={handleAudioPause}
 		class="hidden"
 		aria-hidden="true"
 	></audio>

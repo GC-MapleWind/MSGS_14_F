@@ -135,6 +135,9 @@ interface SettlementResponse {
 	description: string | null;
 	img_url: string | null;
 	audio_url?: string | null;
+	audio_title?: string | null;
+	audio_artist?: string | null;
+	audio_source_url?: string | null;
 	audio_start_seconds?: number;
 	audio_duration_seconds?: number | null;
 	audio_fade_out_seconds?: number | null;
@@ -309,6 +312,9 @@ function mapSettlementResponse(settlement: SettlementResponse): SettlementItem {
 		description: settlement.description || '',
 		imageUrl: normalizeAssetUrl(settlement.img_url),
 		audioUrl: normalizeOptionalAssetUrl(settlement.audio_url),
+		audioTitle: settlement.audio_title ?? null,
+		audioArtist: settlement.audio_artist ?? null,
+		audioSourceUrl: settlement.audio_source_url ?? null,
 		audioStartSeconds: settlement.audio_start_seconds ?? 0,
 		audioDurationSeconds: settlement.audio_duration_seconds ?? null,
 		audioFadeOutSeconds: settlement.audio_fade_out_seconds ?? null,

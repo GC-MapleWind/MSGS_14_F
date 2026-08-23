@@ -47,6 +47,12 @@ export interface SettlementComment {
 	createdAt: string;
 }
 
+export interface SettlementEngagement {
+	likeCount: number;
+	commentCount: number;
+	likedByMe: boolean;
+}
+
 export interface User {
 	id: number;           // 백엔드 회원 고유 번호
 	name: string;

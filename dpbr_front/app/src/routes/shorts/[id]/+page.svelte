@@ -29,13 +29,19 @@
 		getCharacterById,
 		getRandomSettlement,
 		getSettlementById,
+		getSettlementEngagement,
 		getSettlementsByCharacterIdPaginated,
 		getSettlementsPaginated,
+		setSettlementLiked,
 	} from "$lib/api";
 	import { handleImageError } from "$lib/utils/image";
 	import { getSettlementCaption } from "$lib/utils/settlement";
 	import { toast } from "$lib/stores/toast";
-	import type { Character, SettlementItem } from "$lib/types";
+	import type {
+		Character,
+		SettlementEngagement,
+		SettlementItem,
+	} from "$lib/types";
 	type FeedSettlement = SettlementItem & { feedKey: string };
 
 	const characterId = $derived($page.params.id ?? "");
@@ -107,21 +113,50 @@
 		currentItem?.audioUrl ? audioProgress : feedProgress,
 	);
 
-	// 좋아요 (백엔드 API가 없어 로컬 저장)
-	const LIKED_STORAGE_KEY = "liked_settlements";
 	const AUDIO_MUTED_STORAGE_KEY = "shorts_audio_muted";
-	let likedIds = $state<Set<string>>(new Set());
+	let engagementById = $state<Record<string, SettlementEngagement>>({});
+	let engagementLoadingIds = new Set<string>();
+	let likingIds = $state<Set<string>>(new Set());
 	let exportingSettlementId = $state<string | null>(null);
 
-	function loadLikedIds() {
+	async function loadEngagement(id: string, force = false) {
+		if ((!force && engagementById[id]) || engagementLoadingIds.has(id)) return;
+		engagementLoadingIds.add(id);
 		try {
-			const raw = localStorage.getItem(LIKED_STORAGE_KEY);
-			if (raw) {
-				likedIds = new Set(JSON.parse(raw) as string[]);
-			}
-		} catch {
-			likedIds = new Set();
+			const engagement = await getSettlementEngagement(id);
+			engagementById = { ...engagementById, [id]: engagement };
+		} catch (engagementError) {
+			console.error("Failed to load settlement engagement:", engagementError);
+		} finally {
+			engagementLoadingIds.delete(id);
 		}
+	}
+
+	function updateCommentCount(id: string, delta: number) {
+		const current = engagementById[id] ?? {
+			likeCount: 0,
+			commentCount: 0,
+			likedByMe: false,
+		};
+		engagementById = {
+			...engagementById,
+			[id]: {
+				...current,
+				commentCount: Math.max(0, current.commentCount + delta),
+			},
+		};
+	}
+
+	function formatEngagementCount(count: number): string {
+		if (count >= 10_000) {
+			const value = count / 10_000;
+			return `${Number.isInteger(value) ? value : value.toFixed(1)}만`;
+		}
+		if (count >= 1_000) {
+			const value = count / 1_000;
+			return `${Number.isInteger(value) ? value : value.toFixed(1)}천`;
+		}
+		return count.toLocaleString("ko-KR");
 	}
 
 	function loadAudioPreference() {
@@ -422,21 +457,29 @@
 		}
 	}
 
-	function toggleLike(id: string) {
-		const next = new Set(likedIds);
-		if (next.has(id)) {
-			next.delete(id);
-		} else {
-			next.add(id);
+	async function toggleLike(id: string) {
+		if (likingIds.has(id)) return;
+		let current = engagementById[id];
+		if (!current) {
+			await loadEngagement(id);
+			current = engagementById[id];
 		}
-		likedIds = next;
+		if (!current) return;
+
+		likingIds = new Set([...likingIds, id]);
 		try {
-			localStorage.setItem(
-				LIKED_STORAGE_KEY,
-				JSON.stringify([...next]),
+			const updated = await setSettlementLiked(id, !current.likedByMe);
+			engagementById = { ...engagementById, [id]: updated };
+		} catch (likeError) {
+			toast.show(
+				likeError instanceof Error
+					? likeError.message
+					: "좋아요 처리에 실패했습니다.",
 			);
-		} catch {
-			// 저장 실패 시 이번 세션에만 유지
+		} finally {
+			const next = new Set(likingIds);
+			next.delete(id);
+			likingIds = next;
 		}
 	}
 
@@ -823,7 +866,6 @@
 		chronologicalFeedActive = requestChronologicalFeed;
 		currentIndex = 0;
 		feedSequence = 0;
-		loadLikedIds();
 		loadAudioPreference();
 
 		try {
@@ -1008,6 +1050,11 @@
 			wheelConsumed = false;
 			wheelTargetIndex = null;
 		};
+	});
+
+	$effect(() => {
+		const settlementId = currentItem?.id;
+		if (settlementId) void loadEngagement(settlementId);
 	});
 
 	// 한 개의 audio element만 사용해 현재 보이는 Shorts의 음원만 재생한다.
@@ -1644,10 +1691,11 @@
 						>
 							<button
 								type="button"
-								onclick={() => toggleLike(item.id)}
+								onclick={() => void toggleLike(item.id)}
+								disabled={likingIds.has(item.id)}
 								class="flex flex-col items-center drop-shadow"
-								aria-label="좋아요"
-								aria-pressed={likedIds.has(item.id)}
+								aria-label={`좋아요 ${engagementById[item.id]?.likeCount ?? 0}개`}
+								aria-pressed={engagementById[item.id]?.likedByMe ?? false}
 							>
 								<span
 									class="w-8 h-8 flex items-center justify-center"
@@ -1655,23 +1703,31 @@
 									<ThumbsUp
 										size={28}
 										strokeWidth={1.8}
-										fill={likedIds.has(item.id)
+										fill={engagementById[item.id]?.likedByMe
 											? "currentColor"
 											: "none"}
 									/>
 								</span>
-								<span class="text-[12px] mt-1">좋아요</span>
+								<span class="text-[12px] mt-1">
+									{engagementById[item.id]?.likeCount
+										? formatEngagementCount(engagementById[item.id].likeCount)
+										: "좋아요"}
+								</span>
 							</button>
 							<button
 								type="button"
 								onclick={() => openComments(item)}
 								class="flex flex-col items-center drop-shadow"
-								aria-label="현재 결산 댓글"
+								aria-label={`현재 결산 댓글 ${engagementById[item.id]?.commentCount ?? 0}개`}
 							>
 								<span class="w-8 h-8 flex items-center justify-center">
 									<MessageCircle size={28} strokeWidth={1.8} />
 								</span>
-								<span class="text-[12px] mt-1">댓글</span>
+								{#if engagementById[item.id]?.commentCount}
+									<span class="text-[12px] mt-1">
+										{formatEngagementCount(engagementById[item.id].commentCount)}
+									</span>
+								{/if}
 							</button>
 							<button
 								type="button"
@@ -1752,31 +1808,40 @@
 					<div class="flex flex-col items-center gap-1">
 						<button
 							type="button"
-							onclick={() => toggleLike(currentItem.id)}
+							onclick={() => void toggleLike(currentItem.id)}
+							disabled={likingIds.has(currentItem.id)}
 							class="w-12 h-12 rounded-full bg-yt-surface hover:bg-yt-surface-hover text-yt-text flex items-center justify-center"
-							aria-label="좋아요"
-							aria-pressed={likedIds.has(currentItem.id)}
+							aria-label={`좋아요 ${engagementById[currentItem.id]?.likeCount ?? 0}개`}
+							aria-pressed={engagementById[currentItem.id]?.likedByMe ?? false}
 						>
 							<ThumbsUp
 								size={22}
 								strokeWidth={1.8}
-								fill={likedIds.has(currentItem.id)
+								fill={engagementById[currentItem.id]?.likedByMe
 									? "currentColor"
 									: "none"}
 							/>
 						</button>
-						<span class="text-xs text-yt-text">좋아요</span>
+						<span class="text-xs text-yt-text">
+							{engagementById[currentItem.id]?.likeCount
+								? formatEngagementCount(engagementById[currentItem.id].likeCount)
+								: "좋아요"}
+						</span>
 					</div>
 					<div class="flex flex-col items-center gap-1">
 						<button
 							type="button"
 							onclick={() => openComments(currentItem)}
 							class="w-12 h-12 rounded-full bg-yt-surface hover:bg-yt-surface-hover text-yt-text flex items-center justify-center"
-							aria-label="현재 결산 댓글"
+							aria-label={`현재 결산 댓글 ${engagementById[currentItem.id]?.commentCount ?? 0}개`}
 						>
 							<MessageCircle size={22} strokeWidth={1.8} />
 						</button>
-						<span class="text-xs text-yt-text">댓글</span>
+						{#if engagementById[currentItem.id]?.commentCount}
+							<span class="text-xs text-yt-text">
+								{formatEngagementCount(engagementById[currentItem.id].commentCount)}
+							</span>
+						{/if}
 					</div>
 					<div class="flex flex-col items-center gap-1">
 						<button
@@ -1851,6 +1916,8 @@
 		<SettlementCommentsSheet
 			settlement={commentsSettlement}
 			onClose={closeComments}
+			onCountChange={(delta) =>
+				updateCommentCount(commentsSettlement?.id ?? "", delta)}
 		/>
 	{/if}
 

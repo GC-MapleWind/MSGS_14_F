@@ -1,5 +1,11 @@
 import { env } from '$env/dynamic/public';
-import type { Character, SettlementComment, SettlementItem, TeamMessageItem } from './types';
+import type {
+	Character,
+	SettlementComment,
+	SettlementEngagement,
+	SettlementItem,
+	TeamMessageItem
+} from './types';
 import { DEFAULT_AVATAR_URL } from './utils/image';
 
 /**
@@ -165,6 +171,12 @@ interface CommentResponse {
 	author: string;
 	content: string;
 	created_at: string;
+}
+
+interface SettlementEngagementResponse {
+	like_count: number;
+	comment_count: number;
+	liked_by_me: boolean;
 }
 
 interface TeamMemberResponse {
@@ -415,6 +427,48 @@ export async function getRandomSettlement(): Promise<SettlementItem | null> {
 		if (error instanceof ApiError && error.status === 404) return null;
 		throw error;
 	}
+}
+
+function mapSettlementEngagement(
+	data: SettlementEngagementResponse
+): SettlementEngagement {
+	return {
+		likeCount: data.like_count,
+		commentCount: data.comment_count,
+		likedByMe: data.liked_by_me
+	};
+}
+
+export async function getSettlementEngagement(
+	settlementId: string
+): Promise<SettlementEngagement> {
+	const accessToken = getAccessToken();
+	const data = await apiCall<SettlementEngagementResponse>(
+		`/settlements/${settlementId}/engagement`,
+		accessToken
+			? { headers: { Authorization: `Bearer ${accessToken}` } }
+			: undefined
+	);
+	return mapSettlementEngagement(data);
+}
+
+export async function setSettlementLiked(
+	settlementId: string,
+	liked: boolean
+): Promise<SettlementEngagement> {
+	const accessToken = getAccessToken();
+	if (!accessToken) {
+		throw new Error('로그인이 필요합니다.');
+	}
+
+	const data = await apiCall<SettlementEngagementResponse>(
+		`/settlements/${settlementId}/like`,
+		{
+			method: liked ? 'PUT' : 'DELETE',
+			headers: { Authorization: `Bearer ${accessToken}` }
+		}
+	);
+	return mapSettlementEngagement(data);
 }
 
 /**

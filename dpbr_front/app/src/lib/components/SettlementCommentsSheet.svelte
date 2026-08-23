@@ -16,9 +16,10 @@
 	interface Props {
 		settlement: SettlementItem;
 		onClose: () => void;
+		onCountChange?: (delta: number) => void;
 	}
 
-	let { settlement, onClose }: Props = $props();
+	let { settlement, onClose, onCountChange }: Props = $props();
 	let comments = $state<SettlementComment[]>([]);
 	let inputText = $state("");
 	let textareaEl = $state<HTMLTextAreaElement | null>(null);
@@ -85,6 +86,7 @@
 				},
 				...comments,
 			];
+			onCountChange?.(1);
 			inputText = "";
 			if (textareaEl) textareaEl.style.height = "auto";
 		} catch (submitError) {
@@ -189,6 +191,7 @@
 						}}
 						onDelete={(id) => {
 							comments = comments.filter((item) => item.id !== id);
+							onCountChange?.(-1);
 						}}
 					/>
 				{/each}

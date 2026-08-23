@@ -608,7 +608,7 @@
 			.replace(/-+/g, "-")
 			.replace(/^-|-$/g, "")
 			.slice(0, 100);
-		return `${safeName || `settlement-${item.id}`}.png`;
+		return `${safeName || `settlement-${item.id}`}.jpg`;
 	}
 
 	async function waitForSettlementImages(element: HTMLElement) {
@@ -647,16 +647,26 @@
 
 		try {
 			await waitForSettlementImages(element);
-			const { captureElementAsPngBlob } = await import(
+			const baseImage = element.querySelector<HTMLImageElement>(
+				'img[data-share-media="base"]',
+			);
+			if (!baseImage || baseImage.naturalWidth <= 0) {
+				throw new Error("Settlement image was not loaded");
+			}
+
+			const { captureElementAsJpegBlob } = await import(
 				"$lib/utils/capture"
 			);
-			const blob = await captureElementAsPngBlob(element, {
+			const blob = await captureElementAsJpegBlob(element, {
+				baseImage,
 				backgroundColor: "#000000",
+				quality: 0.92,
 				scale: 2,
 			});
-			return new File([blob], getSettlementFilename(item), {
-				type: "image/png",
+			const file = new File([blob], getSettlementFilename(item), {
+				type: "image/jpeg",
 			});
+			return file;
 		} finally {
 			if (focusedElement) focusedElement.style.outline = previousOutline;
 		}
@@ -1196,7 +1206,7 @@
 			const file = await createSettlementFile(item);
 			const { downloadBlob } = await import("$lib/utils/capture");
 			downloadBlob(file, file.name);
-			toast.show("현재 게시글을 PNG로 저장했습니다.");
+			toast.show("현재 게시글을 JPG로 저장했습니다.");
 		} catch (captureError) {
 			console.error("Settlement image save failed:", captureError);
 			toast.show("게시글 이미지 저장에 실패했습니다.");
@@ -1250,7 +1260,6 @@
 						await navigator.share({
 							files: [file],
 							title: shareTitle,
-							text: `${shareText}\n${shareUrl}`,
 						});
 						return;
 					} catch (shareError) {
@@ -1533,7 +1542,9 @@
 					>
 						<!-- 데스크톱 배경: 전체 이미지 바깥 영역만 블러로 채움 -->
 						<img
+							crossorigin="anonymous"
 							src={item.imageUrl}
+							data-share-media="background"
 							alt=""
 							aria-hidden="true"
 							onerror={handleImageError}
@@ -1545,7 +1556,9 @@
 						/>
 						<!-- 본 이미지: 가로 이미지도 크롭하지 않고 전체 표시 -->
 						<img
+							crossorigin="anonymous"
 							src={item.imageUrl}
+							data-share-media="base"
 							alt={item.title}
 							onerror={handleImageError}
 							class="absolute inset-0 w-full h-full object-contain"

@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { X } from "lucide-svelte";
+
 	interface Props {
 		type?: "text" | "number" | "tel";
 		placeholder: string;
@@ -68,23 +70,18 @@
 		onfocus={onFocus}
 		onblur={onBlur}
 		onkeydown={onKeyDown}
-		class="w-full px-4 py-3 rounded-lg outline-none focus:outline-none focus:ring-0 transition-colors bg-primary text-white placeholder-white/70
-			{inputState === 'focused' ? '!border-white' : ''} {className}"
+		class="w-full px-4 py-3 rounded-lg outline-none focus:outline-none focus:ring-0 transition-colors bg-yt-surface text-yt-text placeholder-yt-text-muted border border-transparent
+			{inputState === 'focused' ? '!border-yt-text-muted' : ''} {className}"
 		aria-label={placeholder}
 	/>
 	{#if showClearButton && valueProp.length > 0}
 		<button
 			type="button"
 			onclick={handleClear}
-			class="absolute right-3 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-gray-300/80 flex items-center justify-center hover:bg-gray-400/80 transition-colors"
+			class="absolute right-3 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-yt-surface-hover flex items-center justify-center transition-colors text-yt-text-muted"
 			aria-label="입력 내용 삭제"
 		>
-			<img
-				src="/images/icons/name%3DClose%2C%20Color%3DBlack.svg"
-				alt="지우기"
-				class="w-3.5 h-3.5 opacity-70"
-				draggable="false"
-			/>
+			<X size={14} />
 		</button>
 	{/if}
 </div>

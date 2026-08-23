@@ -83,10 +83,10 @@
 </script>
 
 <div
-	class="min-h-screen bg-bg-app flex flex-col items-center justify-center px-4 py-8"
+	class="min-h-screen bg-yt-bg flex flex-col items-center justify-center px-4 py-8"
 >
 	<div class="w-full max-w-md flex flex-col items-center gap-8">
-		<h1 class="text-4xl font-bold text-white">회원가입</h1>
+		<h1 class="text-4xl font-bold text-yt-text">회원가입</h1>
 
 		<div class="w-full flex flex-col gap-4">
 			<InputBox

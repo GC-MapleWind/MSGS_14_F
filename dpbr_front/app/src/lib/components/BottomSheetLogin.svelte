@@ -1,7 +1,7 @@
 <script lang="ts">
     import { onMount } from "svelte";
     import { env } from "$env/dynamic/public";
-    import { MessageCircle } from "lucide-svelte";
+    import { MessageCircle, X, CircleCheck, Circle } from "lucide-svelte";
     import InputBox from "$lib/components/InputBox.svelte";
     import Button from "$lib/components/Button.svelte";
     import { toast } from "$lib/stores/toast";
@@ -163,20 +163,15 @@
     tabindex="-1"
 >
     <div
-        class="w-full shrink-0 bg-gradient-to-b from-[#FCDDA5] to-[#F1A470] rounded-t-3xl pt-4 pb-8 px-6 flex flex-col items-center shadow-lg transition-all duration-300 {isVisible
+        class="w-full shrink-0 bg-yt-bg border-t border-yt-border rounded-t-3xl pt-4 pb-8 px-6 flex flex-col items-center shadow-lg transition-all duration-300 {isVisible
             ? 'h-[72vh] translate-y-0'
             : 'h-[72vh] translate-y-full'}"
         onclick={(e) => e.stopPropagation()}
     >
         <!-- 닫기 버튼 -->
         <div class="w-full flex justify-end">
-            <button onclick={handleClose} class="text-white p-2">
-                <img
-                    src="/images/icons/close-icon-white.svg"
-                    alt="닫기"
-                    class="w-6 h-6"
-                    draggable="false"
-                />
+            <button onclick={handleClose} class="text-yt-text p-2" aria-label="닫기">
+                <X size={22} strokeWidth={1.8} />
             </button>
         </div>
 
@@ -184,9 +179,9 @@
         <div class="w-full max-w-md flex flex-col items-center mt-2">
             <!-- 앱 타이틀 이미지 로고 -->
             <img
-                src="/images/logos/logo-text-white.svg"
+                src="/images/logos/logo-text-mono.svg"
                 alt="COMMUNITY_PROJECT"
-                class="h-9 object-contain mb-8 mt-1"
+                class="h-9 object-contain mb-8 mt-1 dark:invert"
                 draggable="false"
             />
 
@@ -212,7 +207,7 @@
                         onFocus={handleNameFocus}
                         onBlur={handleNameBlur}
                         onKeyDown={handleNameKeyDown}
-                        class="rounded-lg bg-[#F1A470] border border-[#F87C56] text-white placeholder-white"
+                        class="rounded-lg"
                     />
 
                     <!-- 학번 입력 -->
@@ -231,7 +226,7 @@
                             onBlur={handleStudentIdBlur}
                             onClear={handleStudentIdClear}
                             onKeyDown={handleStudentIdKeyDown}
-                            class="rounded-lg bg-[#F1A470] border border-[#F87C56] text-white placeholder-white"
+                            class="rounded-lg"
                         />
                     </div>
                 </div>
@@ -250,12 +245,12 @@
                         </div>
                     {/if}
                     <Button
-                        label="ACTIVITY_RECAP 톡 입장"
+                        label="로그인하고 댓글 남기기"
                         variant="primary"
                         buttonState={isLoading ? "disabled" : "default"}
                         onClick={() => {}}
                         type="submit"
-                        class="bg-white !text-[#F87C56] hover:bg-white/90 font-medium py-[14px] rounded-lg w-full"
+                        class="font-medium py-[14px] rounded-full w-full"
                     />
                 </div>
 
@@ -268,31 +263,21 @@
                         aria-label="이름 저장"
                     />
                     <div
-                        class="relative flex items-center justify-center w-5 h-5"
+                        class="relative flex items-center justify-center w-5 h-5 text-yt-text"
                     >
                         {#if saveName}
-                            <img
-                                src="/images/icons/check-enable-icon.svg"
-                                alt="저장 활성화"
-                                class="w-full h-full"
-                                draggable="false"
-                            />
+                            <CircleCheck size={20} />
                         {:else}
-                            <img
-                                src="/images/icons/check-disable-icon.svg"
-                                alt="저장 비활성화"
-                                class="w-full h-full"
-                                draggable="false"
-                            />
+                            <Circle size={20} class="text-yt-text-muted" />
                         {/if}
                     </div>
-                    <span class="text-white text-sm font-light select-none"
+                    <span class="text-yt-text text-sm font-light select-none"
                         >이름 저장</span
                     >
                 </label>
 
                 <!-- 구분선 -->
-                <div class="w-full h-px bg-white/30 my-2"></div>
+                <div class="w-full h-px bg-yt-border my-2"></div>
 
                 <!-- 카카오 로그인 버튼 주석 처리
                 <button
@@ -307,7 +292,7 @@
 
             <!-- 푸터 안내문구 -->
             <div class="mt-12 mb-4 flex justify-center">
-                <p class="text-white text-sm font-light text-center">
+                <p class="text-yt-text-muted text-sm font-light text-center">
                     COMMUNITY_PROJECT 회원이 이용 가능한 서비스입니다.
                 </p>
             </div>

@@ -1635,6 +1635,12 @@ svg {
 	top: 12px;
 }
 
+.auth-back {
+	position: absolute;
+	left: 18px;
+	top: 12px;
+}
+
 .auth-card {
 	display: flex;
 	align-items: center;

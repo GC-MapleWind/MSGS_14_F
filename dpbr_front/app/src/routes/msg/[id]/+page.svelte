@@ -1,125 +1,41 @@
 <script lang="ts">
 	import { page } from "$app/stores";
-	import Header from "$lib/components/Header.svelte";
-	import { getSettlementById, getCharacterById } from "$lib/api";
-	import { handleImageError } from "$lib/utils/image";
-	import type { SettlementItem, Character } from "$lib/types";
+	import { goto } from "$app/navigation";
+	import { getSettlementById } from "$lib/api";
 
+	// 기존 결산 상세 페이지는 쇼츠 뷰어로 대체됨.
+	// 기존 링크·북마크 호환을 위해 /shorts/{characterId}?item={id} 로 리다이렉트.
 	const msgId = $derived($page.params.id ?? "");
-	let settlement = $state<SettlementItem | null>(null);
-	let character = $state<Character | null>(null);
-	let isAdminTeam = $derived(character?.name === "COMMUNITY_PROJECT 운영팀");
-	let loading = $state(true);
 	let error = $state<string | null>(null);
 
 	$effect(() => {
-		loadData();
+		void redirect();
 	});
 
-	async function loadData() {
+	async function redirect() {
 		if (!msgId) return;
 
-		loading = true;
-		error = null;
-
 		try {
-			settlement = await getSettlementById(msgId);
+			const settlement = await getSettlementById(msgId);
 			if (settlement) {
-				character = await getCharacterById(settlement.characterId);
+				await goto(
+					`/shorts/${settlement.characterId}?item=${settlement.id}`,
+					{ replaceState: true },
+				);
+			} else {
+				error = "결산 항목을 찾을 수 없습니다.";
 			}
 		} catch (e) {
-			console.error("Failed to load data:", e);
+			console.error("Failed to redirect to shorts:", e);
 			error = "데이터를 불러오는데 실패했습니다.";
-		} finally {
-			loading = false;
 		}
-	}
-
-	function formatDate(dateStr: string): string {
-		const d = new Date(dateStr);
-		return `${d.getFullYear()}년 ${d.getMonth() + 1}월 ${d.getDate()}일 획득`;
-	}
-
-	function goBack() {
-		history.back();
 	}
 </script>
 
 <svelte:head>
-	<title>{settlement?.title ?? "결산 상세"} - COMMUNITY_PROJECT</title>
+	<title>결산 상세 - 단풍바람 14기</title>
 </svelte:head>
 
-<div class="flex flex-col h-full">
-	<Header variant="close" onCloseClick={goBack} />
-
-	{#if loading}
-		<div class="flex-1 flex items-center justify-center">
-			<p class="text-text-muted">로딩 중...</p>
-		</div>
-	{:else if error}
-		<div class="flex-1 flex items-center justify-center">
-			<p class="text-text-muted">{error}</p>
-		</div>
-	{:else if settlement}
-		<div class="flex-1 flex flex-col bg-white overflow-y-auto">
-			<div class="flex justify-center items-center bg-white px-6 py-4">
-				<img
-					src={settlement.imageUrl ||
-						(isAdminTeam
-							? "/logo.png"
-							: character?.avatarUrl || "/default-avatar.png")}
-					alt={settlement.title}
-					onerror={handleImageError}
-					class={isAdminTeam && !settlement.imageUrl
-						? "w-1/2 h-auto object-contain rounded-lg"
-						: "w-full h-auto object-contain rounded-lg"}
-				/>
-			</div>
-
-			<div class="flex flex-col gap-4 px-6 py-4">
-				<div class="flex gap-4">
-					<span
-						class="text-sm font-light text-text-muted shrink-0 w-[72px] text-left whitespace-nowrap"
-						>{isAdminTeam ? "직책" : "획득 일자"}</span
-					>
-					<span class="text-base text-text-primary"
-						>{isAdminTeam
-							? settlement.title
-							: formatDate(settlement.acquiredAt)}</span
-					>
-				</div>
-			</div>
-
-			<hr class="border-bg-light mx-6" />
-
-			<div class="flex flex-col gap-4 px-6 py-4">
-				<div class="flex gap-4">
-					<span
-						class="text-sm font-light text-text-muted shrink-0 w-[72px] text-left whitespace-nowrap"
-						>상세 내용</span
-					>
-					<span class="text-base text-text-primary leading-relaxed"
-						>{settlement.title || settlement.description}</span
-					>
-				</div>
-			</div>
-
-			<hr class="border-bg-light mx-6" />
-		</div>
-
-		<div
-			class="flex justify-center items-center h-[calc(100dvh*64/874)] bg-white shrink-0 mt-2"
-		>
-			<img
-				src="/images/logos/logo-text-mono.svg"
-				alt="COMMUNITY_PROJECT"
-				class="h-5 opacity-40 object-contain"
-				draggable="false"
-			/>
-		</div>
-	{:else}
-		<div class="flex-1 flex items-center justify-center">
-			<p class="text-text-muted">결산 항목을 찾을 수 없습니다.</p>
-		</div>
-	{/if}
+<div class="flex-1 flex items-center justify-center bg-yt-bg">
+	<p class="text-yt-text-muted">{error ?? "로딩 중..."}</p>
 </div>

@@ -60,5 +60,9 @@
 	});
 </script>
 
-<h1>카카오 로그인 처리 중...</h1>
-<p>잠시만 기다려 주세요.</p>
+<div
+	class="flex-1 flex flex-col items-center justify-center gap-2 bg-yt-bg text-center"
+>
+	<h1 class="text-lg font-medium text-yt-text">카카오 로그인 처리 중...</h1>
+	<p class="text-sm text-yt-text-muted">잠시만 기다려 주세요.</p>
+</div>

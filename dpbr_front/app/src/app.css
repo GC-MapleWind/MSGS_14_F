@@ -1,8 +1,6 @@
 @import "tailwindcss";
 
-:root {
-  color-scheme: light;
-}
+@custom-variant dark (&:where(.dark, .dark *));
 
 @font-face {
   font-family: 'GAME_API_PROVIDERLv1Gothic';
@@ -25,20 +23,62 @@
   font-display: swap;
 }
 
-@theme {
-  --color-primary: #fac486;
-  --color-primary-dark: #ff8e42;
-  --color-secondary: #FFE0B2;
-  --color-bg-app: #FFF3E0;
-  --color-bg-card: #ffffff;
-  --color-bg-light: #f7f9fa;
-  --color-border: #edf1f5;
-  --color-border-dark: #e1e8ee;
-  --color-text-primary: #292e33;
-  --color-text-secondary: #6c7680;
-  --color-text-muted: #98a5b3;
-  --color-text-accent: #525c66;
-  --color-bg-overlay: #101010;
+/* 유튜브 스타일 시맨틱 토큰 — 라이트 */
+:root {
+  color-scheme: light;
+  --yt-bg: #ffffff;
+  --yt-surface: #f2f2f2;
+  --yt-surface-hover: #e5e5e5;
+  --yt-text: #0f0f0f;
+  --yt-text-muted: #606060;
+  --yt-border: #e5e5e5;
+  --yt-accent: #ff0000;
+  --yt-chip: #f2f2f2;
+  --yt-chip-active: #0f0f0f;
+  --yt-chip-active-text: #ffffff;
+}
+
+/* 유튜브 스타일 시맨틱 토큰 — 다크 */
+.dark {
+  color-scheme: dark;
+  --yt-bg: #0f0f0f;
+  --yt-surface: #212121;
+  --yt-surface-hover: #3d3d3d;
+  --yt-text: #f1f1f1;
+  --yt-text-muted: #aaaaaa;
+  --yt-border: #303030;
+  --yt-accent: #ff0000;
+  --yt-chip: #272727;
+  --yt-chip-active: #f1f1f1;
+  --yt-chip-active-text: #0f0f0f;
+}
+
+@theme inline {
+  --color-yt-bg: var(--yt-bg);
+  --color-yt-surface: var(--yt-surface);
+  --color-yt-surface-hover: var(--yt-surface-hover);
+  --color-yt-text: var(--yt-text);
+  --color-yt-text-muted: var(--yt-text-muted);
+  --color-yt-border: var(--yt-border);
+  --color-yt-accent: var(--yt-accent);
+  --color-yt-chip: var(--yt-chip);
+  --color-yt-chip-active: var(--yt-chip-active);
+  --color-yt-chip-active-text: var(--yt-chip-active-text);
+
+  /* 기존 토큰 재매핑 (미수정 화면 안전망) */
+  --color-primary: var(--yt-chip);
+  --color-primary-dark: var(--yt-accent);
+  --color-secondary: var(--yt-surface);
+  --color-bg-app: var(--yt-bg);
+  --color-bg-card: var(--yt-bg);
+  --color-bg-light: var(--yt-surface);
+  --color-border: var(--yt-border);
+  --color-border-dark: var(--yt-border);
+  --color-text-primary: var(--yt-text);
+  --color-text-secondary: var(--yt-text-muted);
+  --color-text-muted: var(--yt-text-muted);
+  --color-text-accent: var(--yt-text-muted);
+  --color-bg-overlay: #0f0f0f;
 }
 
 html,
@@ -46,8 +86,8 @@ body {
   font-family: 'GAME_API_PROVIDERLv1Gothic', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background-color: white;
-  color: var(--color-text-primary);
+  background-color: var(--yt-bg);
+  color: var(--yt-text);
 }
 
 /* 상호작용 가능한 요소들에 손가락 커서 강제 적용 */
@@ -64,4 +104,14 @@ input[type="button"]:disabled,
 input[type="submit"]:disabled,
 input[type="reset"]:disabled {
   cursor: not-allowed;
+}
+
+/* 쇼츠 뷰어 등 가로 snap 컨테이너의 스크롤바 숨김 */
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
 }

@@ -449,7 +449,9 @@
 	}
 
 	function handleAudioBuffering() {
+		const element = audioElement;
 		if (
+			!element ||
 			audioPausedByUser ||
 			audioSegmentEnded ||
 			audioError ||
@@ -458,10 +460,39 @@
 		) {
 			return;
 		}
+		if (
+			!element.seeking &&
+			element.readyState >= HTMLMediaElement.HAVE_FUTURE_DATA
+		) {
+			handleAudioReady();
+			return;
+		}
 
 		stopAudioAnimation();
 		isAudioBuffering = true;
 		isAudioPlaying = false;
+	}
+
+	function handleAudioReady() {
+		const element = audioElement;
+		if (
+			!element ||
+			element.seeking ||
+			element.readyState < HTMLMediaElement.HAVE_FUTURE_DATA ||
+			!currentItem?.audioUrl
+		) {
+			return;
+		}
+
+		isAudioBuffering = false;
+		if (
+			element.paused &&
+			!audioPausedByUser &&
+			!audioSegmentEnded &&
+			!audioError
+		) {
+			audioNeedsInteraction = true;
+		}
 	}
 
 	function handleAudioPause() {
@@ -2025,6 +2056,9 @@
 		onseeking={handleAudioBuffering}
 		onwaiting={handleAudioBuffering}
 		onstalled={handleAudioBuffering}
+		onseeked={handleAudioReady}
+		oncanplay={handleAudioReady}
+		oncanplaythrough={handleAudioReady}
 		onpause={handleAudioPause}
 		class="hidden"
 		aria-hidden="true"

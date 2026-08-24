@@ -18,6 +18,7 @@
 		Pause,
 		Music2,
 		RotateCcw,
+		LoaderCircle,
 		Home,
 		Link2,
 		UserRound,
@@ -78,6 +79,7 @@
 	let audioError = $state(false);
 	let audioProgress = $state(0);
 	let isAudioPlaying = $state(false);
+	let isAudioBuffering = $state(false);
 	let audioPausedByUser = $state(false);
 	let resumeAudioAfterVisibility = false;
 	let resumeAudioAfterComments = false;
@@ -177,9 +179,10 @@
 		item: SettlementItem,
 	) {
 		const configuredStart = getAudioStart(item);
-		const latestPlayableStart = Number.isFinite(element.duration)
-			? Math.max(element.duration - 0.05, 0)
-			: configuredStart;
+		const latestPlayableStart =
+			Number.isFinite(element.duration) && element.duration > 0
+				? Math.max(element.duration - 0.05, 0)
+				: configuredStart;
 		element.currentTime = Math.min(configuredStart, latestPlayableStart);
 	}
 
@@ -223,9 +226,10 @@
 		item: SettlementItem,
 	): number {
 		const start = getAudioStart(item);
-		const availableDuration = Number.isFinite(element.duration)
-			? Math.max(element.duration - start, 0)
-			: null;
+		const availableDuration =
+			Number.isFinite(element.duration) && element.duration > 0
+				? Math.max(element.duration - start, 0)
+				: null;
 		const configuredDuration = item.audioDurationSeconds ?? null;
 
 		if (configuredDuration === null) return availableDuration ?? 0;
@@ -311,17 +315,28 @@
 	}
 
 	async function tryPlayAudio(element: HTMLAudioElement, loadId: number) {
+		if (element === audioElement && loadId === audioLoadId) {
+			isAudioBuffering = true;
+			isAudioPlaying = false;
+		}
+
 		try {
 			await element.play();
 			if (element === audioElement && loadId === audioLoadId) {
 				audioNeedsInteraction = false;
 				audioError = false;
-				if (currentItem?.audioUrl) {
-					startAudioAnimation(element, currentItem, loadId);
-				}
 			}
 		} catch (playError) {
 			if (element !== audioElement || loadId !== audioLoadId) return;
+			isAudioBuffering = false;
+			isAudioPlaying = false;
+			if (
+				playError instanceof DOMException &&
+				playError.name === "AbortError" &&
+				(audioPausedByUser || element.paused)
+			) {
+				return;
+			}
 
 			if (
 				playError instanceof DOMException &&
@@ -352,6 +367,7 @@
 		stopAudioAnimation();
 		element.volume = 1;
 		audioPausedByUser = false;
+		audioNeedsInteraction = false;
 		audioSegmentEnded = false;
 		audioProgress = 0;
 		void tryPlayAudio(element, audioLoadId);
@@ -362,7 +378,7 @@
 		const item = currentItem;
 		if (!element || !item?.audioUrl || audioError) return;
 
-		if (isAudioPlaying) {
+		if (isAudioPlaying || isAudioBuffering) {
 			cancelAudioAutoAdvance();
 			audioPausedByUser = true;
 			stopAudioAnimation();
@@ -412,16 +428,51 @@
 	}
 
 	function handleAudioPlay() {
+		isAudioBuffering = true;
+		isAudioPlaying = false;
+	}
+
+	function handleAudioPlaying() {
+		const element = audioElement;
+		const item = currentItem;
+		if (!element || !item?.audioUrl) return;
+		if (audioPausedByUser || commentsSettlement || document.hidden) {
+			element.pause();
+			return;
+		}
+
+		isAudioBuffering = false;
 		isAudioPlaying = true;
+		audioNeedsInteraction = false;
+		audioError = false;
+		startAudioAnimation(element, item, audioLoadId);
+	}
+
+	function handleAudioBuffering() {
+		if (
+			audioPausedByUser ||
+			audioSegmentEnded ||
+			audioError ||
+			audioNeedsInteraction ||
+			!currentItem?.audioUrl
+		) {
+			return;
+		}
+
+		stopAudioAnimation();
+		isAudioBuffering = true;
+		isAudioPlaying = false;
 	}
 
 	function handleAudioPause() {
+		isAudioBuffering = false;
 		isAudioPlaying = false;
 	}
 
 	function handleAudioEnded() {
 		stopAudioAnimation();
 		if (audioElement) audioElement.volume = 0;
+		isAudioBuffering = false;
 		isAudioPlaying = false;
 		audioProgress = 1;
 		audioSegmentEnded = true;
@@ -430,6 +481,7 @@
 
 	function handleAudioError() {
 		if (!currentItem?.audioUrl) return;
+		isAudioBuffering = false;
 		isAudioPlaying = false;
 		audioError = true;
 		audioNeedsInteraction = false;
@@ -440,7 +492,7 @@
 		if (!element || !currentItem?.audioUrl) return;
 
 		if (document.hidden) {
-			resumeAudioAfterVisibility = isAudioPlaying;
+			resumeAudioAfterVisibility = isAudioPlaying || isAudioBuffering;
 			element.pause();
 			return;
 		}
@@ -1087,6 +1139,7 @@
 		audioSegmentEnded = false;
 		audioError = false;
 		isAudioPlaying = false;
+		isAudioBuffering = Boolean(audioUrl);
 		audioPausedByUser = false;
 		resumeAudioAfterVisibility = false;
 		resumeAudioAfterComments = false;
@@ -1307,7 +1360,7 @@
 	function openComments(item: SettlementItem) {
 		isSettingsOpen = false;
 		isShortsSearchOpen = false;
-		resumeAudioAfterComments = isAudioPlaying;
+		resumeAudioAfterComments = isAudioPlaying || isAudioBuffering;
 		audioElement?.pause();
 		commentsSettlement = item;
 	}
@@ -1586,9 +1639,16 @@
 									type="button"
 									onclick={toggleAudioPlayback}
 									class="w-11 h-11 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center backdrop-blur-sm"
-									aria-label={isAudioPlaying ? "BGM 일시정지" : "BGM 재생"}
+									aria-label={isAudioBuffering
+										? "BGM 로딩 중지"
+										: isAudioPlaying
+											? "BGM 일시정지"
+											: "BGM 재생"}
+									aria-busy={isAudioBuffering}
 								>
-									{#if isAudioPlaying}
+									{#if isAudioBuffering}
+										<LoaderCircle size={22} class="animate-spin" />
+									{:else if isAudioPlaying}
 										<Pause size={22} fill="currentColor" />
 									{:else}
 										<Play size={22} fill="currentColor" />
@@ -1635,6 +1695,19 @@
 									class="absolute top-5 left-4 z-20 px-3 py-2 rounded-full bg-black/70 text-xs backdrop-blur-sm"
 								>
 									음원을 재생할 수 없습니다
+								</div>
+							{:else if isAudioBuffering}
+								<div
+									class="absolute inset-0 z-20 flex items-center justify-center pointer-events-none"
+									role="status"
+									aria-live="polite"
+								>
+									<div
+										class="flex items-center gap-2 rounded-full bg-black/70 px-4 py-2 text-sm font-medium backdrop-blur-sm"
+									>
+										<LoaderCircle size={18} class="animate-spin" />
+										음원 불러오는 중
+									</div>
 								</div>
 							{/if}
 						{/if}
@@ -1948,6 +2021,11 @@
 		onended={handleAudioEnded}
 		onerror={handleAudioError}
 		onplay={handleAudioPlay}
+		onplaying={handleAudioPlaying}
+		onloadstart={handleAudioBuffering}
+		onseeking={handleAudioBuffering}
+		onwaiting={handleAudioBuffering}
+		onstalled={handleAudioBuffering}
 		onpause={handleAudioPause}
 		class="hidden"
 		aria-hidden="true"

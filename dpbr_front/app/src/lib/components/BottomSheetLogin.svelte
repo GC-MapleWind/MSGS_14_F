@@ -200,7 +200,7 @@
                         type="text"
                         placeholder="이름"
                         value={name}
-                        maxLength={3}
+                        maxLength={20}
                         inputState={nameFocused ? "focused" : "default"}
                         showClearButton={false}
                         onInput={(value) => (name = value)}

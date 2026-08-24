@@ -1700,13 +1700,12 @@
 								<div
 									class="absolute inset-0 z-20 flex items-center justify-center pointer-events-none"
 									role="status"
-									aria-live="polite"
+									aria-label="BGM 버퍼링 중"
 								>
 									<div
-										class="flex items-center gap-2 rounded-full bg-black/70 px-4 py-2 text-sm font-medium backdrop-blur-sm"
+										class="flex h-12 w-12 items-center justify-center rounded-full bg-black/55 backdrop-blur-sm"
 									>
-										<LoaderCircle size={18} class="animate-spin" />
-										음원 불러오는 중
+										<LoaderCircle size={26} class="animate-spin" />
 									</div>
 								</div>
 							{/if}

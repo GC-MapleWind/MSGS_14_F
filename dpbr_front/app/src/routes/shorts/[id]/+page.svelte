@@ -2031,6 +2031,7 @@
 	{#if commentsSettlement}
 		<SettlementCommentsSheet
 			settlement={commentsSettlement}
+			commentCount={engagementById[commentsSettlement.id]?.commentCount}
 			onClose={closeComments}
 			onCountChange={(delta) =>
 				updateCommentCount(commentsSettlement?.id ?? "", delta)}

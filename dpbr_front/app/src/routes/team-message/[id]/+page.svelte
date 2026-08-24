@@ -1,17 +1,27 @@
 <script lang="ts">
 	import { page } from "$app/stores";
+	import { MessageCircle, ThumbsUp } from "lucide-svelte";
 	import Header from "$lib/components/Header.svelte";
-	import { getTeamMessageDetail } from "$lib/api";
+	import SettlementCommentsSheet from "$lib/components/SettlementCommentsSheet.svelte";
+	import {
+		getTeamMessageDetail,
+		getTeamMessageEngagement,
+		setTeamMessageLiked,
+	} from "$lib/api";
+	import { toast } from "$lib/stores/toast";
 	import {
 		DEFAULT_AVATAR_URL,
 		handleImageError,
 	} from "$lib/utils/image";
-	import type { TeamMessageItem } from "$lib/types";
+	import type { SettlementEngagement, TeamMessageItem } from "$lib/types";
 
 	const teamMessageId = $derived($page.params.id ?? "");
 	let teamMessage = $state<TeamMessageItem | null>(null);
 	let loading = $state(true);
 	let error = $state<string | null>(null);
+	let engagement = $state<SettlementEngagement | null>(null);
+	let liking = $state(false);
+	let commentsOpen = $state(false);
 
 	$effect(() => {
 		if (teamMessageId) {
@@ -27,6 +37,12 @@
 
 		try {
 			teamMessage = await getTeamMessageDetail(teamMessageId);
+			try {
+				engagement = await getTeamMessageEngagement(teamMessageId);
+			} catch (engagementError) {
+				console.error("Failed to load team message engagement:", engagementError);
+				engagement = null;
+			}
 		} catch (e) {
 			console.error("Failed to load team message data:", e);
 			error = "데이터를 불러오는데 실패했습니다.";
@@ -37,6 +53,46 @@
 
 	function goBack() {
 		history.back();
+	}
+
+	async function toggleLike() {
+		if (!engagement || liking) return;
+
+		liking = true;
+		try {
+			engagement = await setTeamMessageLiked(
+				teamMessageId,
+				!engagement.likedByMe,
+			);
+		} catch (likeError) {
+			toast.show(
+				likeError instanceof Error
+					? likeError.message
+					: "좋아요 처리에 실패했습니다.",
+			);
+		} finally {
+			liking = false;
+		}
+	}
+
+	function updateCommentCount(delta: number) {
+		if (!engagement) return;
+		engagement = {
+			...engagement,
+			commentCount: Math.max(0, engagement.commentCount + delta),
+		};
+	}
+
+	function formatEngagementCount(count: number): string {
+		if (count >= 10_000) {
+			const value = count / 10_000;
+			return `${Number.isInteger(value) ? value : value.toFixed(1)}만`;
+		}
+		if (count >= 1_000) {
+			const value = count / 1_000;
+			return `${Number.isInteger(value) ? value : value.toFixed(1)}천`;
+		}
+		return count.toLocaleString("ko-KR");
 	}
 </script>
 
@@ -87,6 +143,41 @@
 				</div>
 			</div>
 
+			<div class="flex items-center gap-3 px-6 pb-5">
+				<button
+					type="button"
+					onclick={() => void toggleLike()}
+					disabled={!engagement || liking}
+					class="flex min-h-11 items-center gap-2 rounded-full bg-yt-surface px-4 text-sm font-medium text-yt-text hover:bg-yt-surface-hover disabled:opacity-50"
+					aria-label={`좋아요 ${engagement?.likeCount ?? 0}개`}
+					aria-pressed={engagement?.likedByMe ?? false}
+				>
+					<ThumbsUp
+						size={21}
+						strokeWidth={1.8}
+						fill={engagement?.likedByMe ? "currentColor" : "none"}
+					/>
+					<span>
+						{engagement?.likeCount
+							? formatEngagementCount(engagement.likeCount)
+							: "좋아요"}
+					</span>
+				</button>
+				<button
+					type="button"
+					onclick={() => (commentsOpen = true)}
+					disabled={!engagement}
+					class="flex min-h-11 items-center gap-2 rounded-full bg-yt-surface px-4 text-sm font-medium text-yt-text hover:bg-yt-surface-hover disabled:opacity-50"
+					aria-label={`댓글 ${engagement?.commentCount ?? 0}개`}
+				>
+					<MessageCircle size={21} strokeWidth={1.8} />
+					<span>댓글</span>
+					{#if engagement?.commentCount}
+						<span>{formatEngagementCount(engagement.commentCount)}</span>
+					{/if}
+				</button>
+			</div>
+
 			<hr class="border-yt-border mx-6" />
 
 			<div class="flex flex-col gap-4 px-6 py-4">
@@ -121,3 +212,12 @@
 		</div>
 	{/if}
 </div>
+
+{#if commentsOpen && teamMessage}
+	<SettlementCommentsSheet
+		{teamMessage}
+		commentCount={engagement?.commentCount}
+		onClose={() => (commentsOpen = false)}
+		onCountChange={updateCommentCount}
+	/>
+{/if}

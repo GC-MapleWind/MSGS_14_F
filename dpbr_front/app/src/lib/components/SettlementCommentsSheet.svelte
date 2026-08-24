@@ -5,21 +5,38 @@
 	import CommentItem from "$lib/components/CommentItem.svelte";
 	import {
 		createSettlementComment,
+		createTeamMessageComment,
 		formatCommentDateTime,
 		getSettlementComments,
+		getTeamMessageComments,
 	} from "$lib/api";
 	import { authStore } from "$lib/stores/auth";
 	import { toast } from "$lib/stores/toast";
-	import type { SettlementComment, SettlementItem } from "$lib/types";
+	import type {
+		SettlementComment,
+		SettlementItem,
+		TeamMessageItem,
+	} from "$lib/types";
 	import { DEFAULT_AVATAR_URL } from "$lib/utils/image";
 
 	interface Props {
-		settlement: SettlementItem;
+		settlement?: SettlementItem;
+		teamMessage?: TeamMessageItem;
+		commentCount?: number;
 		onClose: () => void;
 		onCountChange?: (delta: number) => void;
 	}
 
-	let { settlement, onClose, onCountChange }: Props = $props();
+	let {
+		settlement,
+		teamMessage,
+		commentCount,
+		onClose,
+		onCountChange,
+	}: Props = $props();
+	let targetId = $derived(teamMessage?.id ?? settlement?.id ?? "");
+	let targetTitle = $derived(teamMessage?.title ?? settlement?.title ?? "");
+	let isTeamMessage = $derived(Boolean(teamMessage));
 	let comments = $state<SettlementComment[]>([]);
 	let inputText = $state("");
 	let textareaEl = $state<HTMLTextAreaElement | null>(null);
@@ -30,13 +47,16 @@
 	let loadVersion = 0;
 
 	async function loadComments() {
-		const settlementId = settlement.id;
+		const requestedTargetId = targetId;
+		if (!requestedTargetId) return;
 		const requestVersion = ++loadVersion;
 		loading = true;
 		error = null;
 
 		try {
-			const loadedComments = await getSettlementComments(settlementId);
+			const loadedComments = isTeamMessage
+				? await getTeamMessageComments(requestedTargetId)
+				: await getSettlementComments(requestedTargetId);
 			if (requestVersion !== loadVersion) return;
 			comments = loadedComments;
 		} catch (loadError) {
@@ -49,8 +69,8 @@
 	}
 
 	$effect(() => {
-		void settlement.id;
-		void loadComments();
+		void targetId;
+		if (targetId) void loadComments();
 	});
 
 	function adjustTextarea() {
@@ -73,11 +93,14 @@
 
 		submitting = true;
 		try {
-			const created = await createSettlementComment(settlement.id, text);
+			const created = isTeamMessage
+				? await createTeamMessageComment(targetId, text)
+				: await createSettlementComment(targetId, text);
 			comments = [
 				{
 					id: created.id.toString(),
-					settlementId: (created.settlement_id ?? settlement.id).toString(),
+					settlementId: created.settlement_id?.toString() ?? "",
+					teamMessageId: created.team_message_id?.toString(),
 					userId: created.user_id,
 					author: created.author,
 					authorAvatar: DEFAULT_AVATAR_URL,
@@ -135,7 +158,7 @@
 		onclick={(event) => event.stopPropagation()}
 		role="dialog"
 		aria-modal="true"
-		aria-labelledby="settlement-comments-title"
+		aria-labelledby="comments-title"
 		tabindex="-1"
 	>
 		<div class="flex justify-center pt-2 lg:hidden" aria-hidden="true">
@@ -144,10 +167,12 @@
 		<header class="flex h-14 shrink-0 items-center justify-between border-b border-yt-border px-5">
 			<div class="min-w-0">
 				<div class="flex items-baseline gap-2">
-					<h2 id="settlement-comments-title" class="text-base font-semibold">댓글</h2>
-					<span class="text-xs text-yt-text-muted">{comments.length.toLocaleString()}</span>
+					<h2 id="comments-title" class="text-base font-semibold">댓글</h2>
+					<span class="text-xs text-yt-text-muted">
+						{(commentCount ?? comments.length).toLocaleString()}
+					</span>
 				</div>
-				<p class="max-w-[270px] truncate text-xs text-yt-text-muted">{settlement.title}</p>
+				<p class="max-w-[270px] truncate text-xs text-yt-text-muted">{targetTitle}</p>
 			</div>
 			<button
 				type="button"
@@ -178,7 +203,11 @@
 			{:else if comments.length === 0}
 				<div class="flex h-full flex-col items-center justify-center gap-1 px-6 text-center">
 					<p class="text-sm font-medium">첫 댓글을 남겨 보세요.</p>
-					<p class="text-xs text-yt-text-muted">이 결산에 대한 응원을 기다리고 있어요.</p>
+					<p class="text-xs text-yt-text-muted">
+						{isTeamMessage
+							? "이 한마디에 대한 응원을 기다리고 있어요."
+							: "이 결산에 대한 응원을 기다리고 있어요."}
+					</p>
 				</div>
 			{:else}
 				{#each comments as comment (comment.id)}

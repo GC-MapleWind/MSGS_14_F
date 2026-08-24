@@ -40,6 +40,7 @@ export interface TeamMessageItem {
 export interface SettlementComment {
 	id: string;
 	settlementId: string;
+	teamMessageId?: string;
 	userId: number | null;
 	author: string;
 	authorAvatar: string;

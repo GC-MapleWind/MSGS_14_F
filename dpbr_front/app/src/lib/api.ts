@@ -168,6 +168,7 @@ interface CommentResponse {
 	id: number;
 	user_id: number | null;
 	settlement_id: number | null;
+	team_message_id: number | null;
 	author: string;
 	content: string;
 	created_at: string;
@@ -471,6 +472,38 @@ export async function setSettlementLiked(
 	return mapSettlementEngagement(data);
 }
 
+export async function getTeamMessageEngagement(
+	memberId: string
+): Promise<SettlementEngagement> {
+	const accessToken = getAccessToken();
+	const data = await apiCall<SettlementEngagementResponse>(
+		`/system/team/${memberId}/engagement`,
+		accessToken
+			? { headers: { Authorization: `Bearer ${accessToken}` } }
+			: undefined
+	);
+	return mapSettlementEngagement(data);
+}
+
+export async function setTeamMessageLiked(
+	memberId: string,
+	liked: boolean
+): Promise<SettlementEngagement> {
+	const accessToken = getAccessToken();
+	if (!accessToken) {
+		throw new Error('로그인이 필요합니다.');
+	}
+
+	const data = await apiCall<SettlementEngagementResponse>(
+		`/system/team/${memberId}/like`,
+		{
+			method: liked ? 'PUT' : 'DELETE',
+			headers: { Authorization: `Bearer ${accessToken}` }
+		}
+	);
+	return mapSettlementEngagement(data);
+}
+
 /**
  * 특정 결산의 댓글 목록 조회
  */
@@ -486,6 +519,28 @@ export async function getSettlementComments(
 	return data.map((comment) => ({
 		id: comment.id.toString(),
 		settlementId: (comment.settlement_id ?? settlementId).toString(),
+		teamMessageId: comment.team_message_id?.toString(),
+		userId: comment.user_id,
+		author: comment.author,
+		authorAvatar: DEFAULT_AVATAR_URL,
+		content: comment.content,
+		createdAt: formatCommentDateTime(comment.created_at)
+	}));
+}
+
+export async function getTeamMessageComments(
+	memberId: string,
+	page: number = 1,
+	limit: number = 20
+): Promise<SettlementComment[]> {
+	const data = await apiCall<CommentResponse[]>(
+		`/system/team/${memberId}/comments?page=${page}&limit=${limit}`
+	);
+
+	return data.map((comment) => ({
+		id: comment.id.toString(),
+		settlementId: '',
+		teamMessageId: comment.team_message_id?.toString(),
 		userId: comment.user_id,
 		author: comment.author,
 		authorAvatar: DEFAULT_AVATAR_URL,
@@ -507,6 +562,24 @@ export async function createSettlementComment(
 	}
 
 	return await apiCall<CommentResponse>(`/settlements/${settlementId}/comments`, {
+		method: 'POST',
+		headers: {
+			Authorization: `Bearer ${accessToken}`
+		},
+		body: JSON.stringify({ content })
+	});
+}
+
+export async function createTeamMessageComment(
+	memberId: string,
+	content: string
+): Promise<CommentResponse> {
+	const accessToken = getAccessToken();
+	if (!accessToken) {
+		throw new Error('로그인이 필요합니다.');
+	}
+
+	return await apiCall<CommentResponse>(`/system/team/${memberId}/comments`, {
 		method: 'POST',
 		headers: {
 			Authorization: `Bearer ${accessToken}`
@@ -538,6 +611,7 @@ export async function updateComment(
 	return {
 		id: updated.id.toString(),
 		settlementId: updated.settlement_id?.toString() ?? '',
+		teamMessageId: updated.team_message_id?.toString(),
 		userId: updated.user_id,
 		author: updated.author,
 		authorAvatar: DEFAULT_AVATAR_URL,
